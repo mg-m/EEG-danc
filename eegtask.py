@@ -234,7 +234,7 @@ async def main():
                             keytime=trialClock.getTime()
                             break
                         if EEG:
-                            ns.send_event(bytes('grsp'.encode()), label=bytes("grasping".encode()), description=bytes("infant grasping".encode()))
+                            ns.send_event(bytes('grsp'.encode()), label=bytes("grasping".encode()), description=bytes("grasping".encode()))
                             time.sleep(0.1)
 
                     trial_dur = trialClock.getTime()
