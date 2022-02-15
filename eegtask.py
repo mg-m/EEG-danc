@@ -22,6 +22,7 @@ import datetime
 
 IO_SAMP_CHAR_UUID = "6a80ff0c-b5a3-f393-e0a9-e50e24dcca9e"
 ms_localtime=egi.ms_localtime
+
 event.globalKeys.add(key='q', func=core.quit, name='shutdown')
 
 async def main():
@@ -60,6 +61,14 @@ async def main():
 
         if correct_input:
             break
+    #shutdown
+    if event.globalKeys.add(key='q', func=core.quit, name='shutdown'):
+        if EEG:
+            ns.StopRecording()
+            ns.EndSession()
+            ns.disconnect()
+
+        data.to_csv(logfile_fname)
 
     # Scan for accelerometer
     if accelerometer:
