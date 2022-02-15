@@ -1,74 +1,89 @@
 from bleak import BleakScanner
 from bleak import BleakClient
-from psychopy.visual import TextStim
 import psychopy.visual
 import psychopy.event
 import psychopy.clock
 import psychopy.core
 import psychopy.gui
 import os
-import glob
 import pandas as pd
 import numpy as np
-import pprint
-import time
-from psychopy import data
-from random import shuffle
-from psychopy import core
 from psychopy import core, event
-from psychopy import logging
-from psychopy import clock
-from psychopy.hardware import keyboard
 import random
-import datetime
 import matplotlib.pyplot as plt
-from sensor import GyroAccelSensor, TempPressureSensor, AmbientLightSensor
-import importlib
+#from sensor import GyroAccelSensor
 #_winrt=importlib.import_module("winrt._winrt")
 #_winrt.uninit_apartment()
 #import winrt
 #import bleak
 import asyncio
-from sensor import RecordingDevice
-import struct
-import sys
-import time
 import egi.simple as egi
+import datetime
 
 IO_SAMP_CHAR_UUID = "6a80ff0c-b5a3-f393-e0a9-e50e24dcca9e"
 ms_localtime=egi.ms_localtime
 event.globalKeys.add(key='q', func=core.quit, name='shutdown')
 
 async def main():
-    # gui interface
-    gui = psychopy.gui.Dlg()
-    gui.addField("Subject ID:")
-    gui.addField("Visit")
-    gui.addField("Age")
-    gui.addField('Screens', initial=True, choices=["1", "2"])
-    gui.addField('Accelerometer', initial=True, choices=[True, False])
-    gui.addField('EEG', initial=True, choices=[True, False])
-    gui.addField('Show Plot', initial=True, choices=[True, False])
-    gui.show()
-    print(gui.data)
-    if gui.OK:
-        ID = gui.data[0]
-        visit = gui.data[1]
-        age = gui.data[2]
-        Screens = gui.data[3]
-        Accelerometer = gui.data[4]
-        EEG = gui.data[5]
-        showgraph = gui.data[6]
 
-    if Accelerometer:
+    while True:
+        # gui interface
+        gui = psychopy.gui.Dlg()
+        gui.addField("Subject ID:")
+        gui.addField("Visit")
+        gui.addField("Age")
+        gui.addField('Screens', initial=True, choices=["1", "2"])
+        gui.addField('Accelerometer', initial=True, choices=[True, False])
+        gui.addField('EEG', initial=True, choices=[True, False])
+        gui.addField('Show Plot', initial=True, choices=[True, False])
+        gui.show()
+        print(gui.data)
+        if gui.OK:
+            correct_input = True
+            subj_id = gui.data[0]
+            if not (subj_id.startswith('sub-') and subj_id.split('-')[1].isdigit() and len(subj_id.split('-')[1])==3):
+                correct_input=False
+                print('Bad subject ID')
+            visit=gui.data[1]
+            if not gui.data[1].isdigit():
+                correct_input=False
+                print('Bad visit number')
+            else:
+                visit = 'ses-{}'.format(gui.data[1])
+            age = gui.data[2]
+            screens = gui.data[3]
+            accelerometer = gui.data[4]
+            EEG = gui.data[5]
+            showgraph = gui.data[6]
+        else:
+            core.quit()
+
+        if correct_input:
+            break
+
+    # Scan for accelerometer
+    if accelerometer:
+
+        # Initialize variable
+        client=None
+
+        # Function will be called if sensor is disconnected
+        def callback(client):
+            print('sensor got disconnected'.format(address))
+
+        # Keep looking until we find it
         while True:
             print('Scanning...')
             address = None
             devices = await BleakScanner.discover()
+
+            # Look for device called SENSOR_PRO
             for d in devices:
                 if d.name == 'SENSOR_PRO':
                     address = d.address
                     print('SENSOR_PRO found: %s' % address)
+
+            # Try to connect to it
             if address is not None:
                 print('Connecting...')
                 try:
@@ -76,21 +91,25 @@ async def main():
                         break
                 except:
                     pass
-        def callback(client):
-            print('sensor got disconnected'.format(address))
-        client.set_disconnected_callback(callback)
-        client.connect
 
         client = BleakClient(address)
+        client.set_disconnected_callback(callback)
         await client.connect()
+
+        # Set sampling rate to 100Hz
         print('Setting sampling rate')
         write_value = b"\x00\x64"
-        value = await client.read_gatt_char(IO_SAMP_CHAR_UUID)
         await client.write_gatt_char(IO_SAMP_CHAR_UUID, write_value)
+
+        # Checks that it was set
         value = await client.read_gatt_char(IO_SAMP_CHAR_UUID)
         assert value == write_value
+
+        # Enable gyo/acc sensor
         gyro_acc = GyroAccelSensor(client)
         await gyro_acc.enable()
+
+        # Initialize graph
         if showgraph:
             gyro_data = np.zeros((3, 100))
             accel_data = np.zeros((3, 100))
@@ -111,10 +130,12 @@ async def main():
 
     try:
         # file location
-        data_path = "task.csv"
-        data_path_exists = os.path.exists(data_path)  # data path
-        print(data_path_exists)
-
+        data_path = os.path.join("./data", subj_id, visit)
+        if not os.path.exists(data_path):
+            os.makedirs(data_path, exist_ok=True)
+        timestamp=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        logfile_fname = os.path.join(data_path, "{}_{}_{}_logfile.csv".format(subj_id, visit, timestamp))
+        acc_fname = os.path.join(data_path, "{}_{}_{}_acc-data.csv".format(subj_id, visit, timestamp))
 
         # save data
         data = pd.DataFrame()
@@ -122,7 +143,7 @@ async def main():
 
         # welcome
         win = psychopy.visual.Window(size=[600, 600], units="pix", fullscr=False, color=[1, 1, 1], checkTiming=True,screen=0)
-        if Screens=="2":
+        if screens=="2":
             win2=psychopy.visual.Window(size=[600, 600], units="pix", fullscr=False, color=[1, 1, 1], checkTiming=True,screen=1)
             #2 screens
             def make_draw_mirror(draw_fun):
@@ -143,17 +164,17 @@ async def main():
             ns = egi.Netstation()
             ns.connect('10.10.10.42', 55513)
             ns.BeginSession()
-            ns.sync
+            ns.sync()
             ns.StartRecording()
 
         text = psychopy.visual.TextStim(win=win, text="Welcome to this experiment ! ", color=[-1, -1, -1])
-        if Screens=="2":
+        if screens=="2":
             text.draw=make_draw_mirror(text.draw)
         text.draw()
         win.flip()
         psychopy.clock.wait(3, hogCPUperiod=0.2)
         text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
-        if Screens=="2":
+        if screens=="2":
             text.draw=make_draw_mirror(text.draw)
         text.draw()
         win.flip()
@@ -166,14 +187,14 @@ async def main():
         nTrials = 1
         for block_type,block_conditions in zip(block_types,conditions):
             text = psychopy.visual.TextStim(win=win, text="Bloc %s" % block_type, color=[-1, -1, -1])
-            if Screens=="2":
+            if screens=="2":
                 text.draw=make_draw_mirror(text.draw)
             text.draw()
             win.flip()
             psychopy.clock.wait(3, hogCPUperiod=0.2)
             for block in range(nBlocks):
                 text = psychopy.visual.TextStim(win=win, text=" Press a key when the child reached the object",color=[-1, -1, -1])
-                if Screens=="2":
+                if screens=="2":
                     text.draw=make_draw_mirror(text.draw)
                 text.draw()
                 win.flip()
@@ -181,23 +202,22 @@ async def main():
                 for trial in range(nTrials):
                     condition = random.choice(block_conditions)
                     text = psychopy.visual.TextStim(win=win, text="%s %s" % (condition, block_type), color=[-1, -1, -1])
-                    if Screens=="2":
+                    if screens=="2":
                         text.draw=make_draw_mirror(text.draw)
                     text.draw()
                     if EEG:
-                        ns.send_event(bytes('obj'.encode()), label=bytes("%s %s" % (condition, block_type).encode()),
-                                      description=bytes("%s %s" % (condition, block_type).encode()))
-                        time.sleep(0.1)
+                        ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
+                                      description=bytes(("%s %s" % (condition, block_type)).encode()))
                     trialClock = core.Clock()
                     trial_start=core.getTime()
                     win.flip()
 
                     while True:
-                        if Accelerometer:
+                        if accelerometer:
                             trial_time=trialClock.getTime()
                             (gyro, accel) = await gyro_acc.read()
                             sdata = sdata.append({
-                                'id': ID,
+                                'id': subj_id,
                                 'visit': visit,
                                 'age': age,
                                 'block_type':block_type,
@@ -235,11 +255,10 @@ async def main():
                             break
                         if EEG:
                             ns.send_event(bytes('grsp'.encode()), label=bytes("grasping".encode()), description=bytes("grasping".encode()))
-                            time.sleep(0.1)
 
                     trial_dur = trialClock.getTime()
                     data = data.append({
-                        'id': ID,
+                        'id': subj_id,
                         'visit': visit,
                         'age': age,
                         'block_type':block_type,
@@ -250,27 +269,24 @@ async def main():
                         'trial_start':trial_start,
                         'trial_dur':trial_dur
                         },ignore_index=True)
-                    logfile_path = "eeg test"
-                    logfile_name1 = "{}logfile_{}.csv".format(logfile_path, ID)
-                    data.to_csv(logfile_name1)
-                    if Accelerometer:
-                        logfile_name2 = "{}logfilesensor_{}.csv".format(logfile_path, ID)
-                        sdata.to_csv(logfile_name2)
+                    data.to_csv(logfile_fname)
+                    if accelerometer:
+                        sdata.to_csv(acc_fname)
 
                     text = psychopy.visual.TextStim(win=win, text=" Press a key when ready for next trial",color=[-1, -1, -1])
-                    if Screens=="2":
+                    if screens=="2":
                         text.draw=make_draw_mirror(text.draw)
                     text.draw()
                     win.flip()
                     psychopy.event.waitKeys()
                 text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s " % (block_type), color=[-1, -1, -1])
-                if Screens=="2":
+                if screens=="2":
                     text.draw=make_draw_mirror(text.draw)
                 text.draw()
                 win.flip()
                 psychopy.clock.wait(2, hogCPUperiod=0.2)
             text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
-            if Screens=="2":
+            if screens=="2":
                 text.draw=make_draw_mirror(text.draw)
             text.draw()
             win.flip()
@@ -279,7 +295,7 @@ async def main():
 
         # end of experiment
         text = psychopy.visual.TextStim(win=win, text="End of the experiment", color=[-1, -1, -1])
-        if Screens=="2":
+        if screens=="2":
             text.draw=make_draw_mirror(text.draw)
         text.draw()
         win.flip()
@@ -291,14 +307,10 @@ async def main():
             ns.EndSession()
             ns.disconnect()
 
-            # save data
-        logfile_path = "eeg test"
-        logfile_name1 = "{}logfile_{}.csv".format(logfile_path, ID)
-        data.to_csv(logfile_name1)
-        if Accelerometer:
-            logfile_name2 = "{}logfilesensor_{}.csv".format(logfile_path, ID)
-            sdata.to_csv(logfile_name2)
+        data.to_csv(logfile_fname)
+        if accelerometer:
+            sdata.to_csv(acc_fname)
     finally:
-        if Accelerometer:
+        if accelerometer:
             await gyro_acc.disable()
 asyncio.run(main())
