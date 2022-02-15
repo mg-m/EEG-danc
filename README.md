@@ -1,2 +1,2 @@
 # test-eeg
- test eeg 
+EEG grasping task
