@@ -1,3 +1,5 @@
+#python3.7 required
+
 from bleak import BleakScanner
 from bleak import BleakClient
 import psychopy.visual
