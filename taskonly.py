@@ -12,6 +12,7 @@ import random
 import matplotlib.pyplot as plt
 import egi.simple as egi
 import datetime
+import socket 
 
 ms_localtime=egi.ms_localtime
 
@@ -97,6 +98,7 @@ if correct_input:
     win = psychopy.visual.Window(size=[600, 600], units="pix", fullscr=False, color=[1, 1, 1], checkTiming=True,screen=0)
     if screens=="2":
         win2=psychopy.visual.Window(size=[600, 600], units="pix", fullscr=False, color=[1, 1, 1], checkTiming=True,screen=1)
+
         #2 screens
         def make_draw_mirror(draw_fun):
             def mirror_draw_fun(*args, **kwargs):
@@ -109,8 +111,6 @@ if correct_input:
                 flip_fun(*args, **kwargs)
             return mirror_flip_fun
         win.flip=make_flip_mirror(win.flip)
-
-        #netstationIP:10.10.10.42
 
         if EEG:
             ns = egi.Netstation()
