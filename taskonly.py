@@ -25,6 +25,7 @@ gui.addField("Age")
 gui.addField('Screens', initial=True, choices=["1", "2"])
 gui.addField('EEG', initial=True, choices=[True, False])
 gui.addField('Show Plot', initial=True, choices=[True, False])
+gui.addField('Video Computer', initial=True, choices=[True, False])
 gui.show()
 print(gui.data)
 if gui.OK:
@@ -43,18 +44,41 @@ if gui.OK:
     screens = gui.data[3]
     EEG = gui.data[4]
     showgraph = gui.data[5]
+    video=gui.data[6]
 else:
     core.quit()
 if correct_input:
 
-#shutdown
-    if event.globalKeys.add(key='q', func=core.quit, name='shutdown'):
+    #shutdown not working
+    if event.globalKeys.add(key='k', func=core.quit, name='shutdown'):
         if EEG:
             ns.StopRecording()
             ns.EndSession()
             ns.disconnect()
-
         data.to_csv(logfile_fname)
+
+    if video:
+        # connection video computer
+        TCP_IP = ""
+        TCP_PORT = 0
+
+        # setting up the connection
+        print("waiting for the video computer to init")
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(999)
+        s.bind((TCP_IP, TCP_PORT))
+        s.listen(1)
+        conn, addr = s.accept()
+
+        print("CONNECTION ADDRESS:", addr)
+
+        # waiting for the client to initialize and connect
+        while True:
+            data = conn.recv(buffer_size)
+            if data.decode() == "connected":
+                print("video PC ready and connected")
+                break
+        # add connection to accelerometers
 
     # file location
     data_path = os.path.join("./data", subj_id, visit)
@@ -65,6 +89,9 @@ if correct_input:
 
     # save data
     data = pd.DataFrame()
+    if video:
+        message_start = str(trial_n).zfill(4) + "_start_" + str(timestamp)
+        conn.send(message_start.encode())
 
     # welcome
     win = psychopy.visual.Window(size=[600, 600], units="pix", fullscr=False, color=[1, 1, 1], checkTiming=True,screen=0)
@@ -189,12 +216,28 @@ if correct_input:
         psychopy.clock.wait(3, hogCPUperiod=0.2)
         win.close()
 
+        if video:
+            message_stop = str(trial_n).zfill(4) + "_stop"
+            conn.send(message_stop.encode())
+
         if EEG:
             ns.StopRecording()
             ns.EndSession()
             ns.disconnect()
 
+            if video:
+                if event.getKeys(keyList=["escape"], timeStamped=False):
+                    message_finish = "exit_stop"
+                    conn.send(message_finish.encode())
+                    win.close()
+                    core.quit()
+
+                data = conn.recv(buffer_size)
+                if "dumped" in data.decode():
+                    dump_output = data.decode()
+                    x, dump_time, x, rec_time = dump_output.split("_")
+                    print(dump_output, "video data dumped")
+
         data.to_csv(logfile_fname)
-        if accelerometer:
-            sdata.to_csv(acc_fname)
+
 
