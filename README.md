@@ -1,1 +1,1 @@
-EEG grasping task
+EEG infants grasping task
