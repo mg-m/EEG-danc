@@ -12,7 +12,7 @@ import random
 import matplotlib.pyplot as plt
 import egi.simple as egi
 import datetime
-import socket 
+import socket
 
 ms_localtime=egi.ms_localtime
 
@@ -50,7 +50,7 @@ else:
     core.quit()
 if correct_input:
 
-    #shutdown not working
+    #shutdown
     if event.globalKeys.add(key='k', func=core.quit, name='shutdown'):
         if EEG:
             ns.StopRecording()
