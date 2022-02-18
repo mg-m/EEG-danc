@@ -16,8 +16,6 @@ import socket
 
 ms_localtime=egi.ms_localtime
 
-event.globalKeys.add(key='q', func=core.quit, name='shutdown')
-
 # gui interface
 gui = psychopy.gui.Dlg()
 gui.addField("Subject ID:")
@@ -53,13 +51,25 @@ else:
     core.quit()
 if correct_input:
 
-    #shutdown
-    if event.globalKeys.add(key='k', func=core.quit, name='shutdown'):
+    #shutdown and save data
+    if event.globalKeys.add(key='q', func=core.quit, name='shutdown'):
         if EEG:
             ns.StopRecording()
             ns.EndSession()
             ns.disconnect()
         data.to_csv(logfile_fname)
+        if video:
+            if event.getKeys(keyList=["q"], timeStamped=False):
+                message_finish = "exit_stop"
+                conn.send(message_finish.encode())
+                win.close()
+                core.quit()
+
+            data = conn.recv(buffer_size)
+            if "dumped" in data.decode():
+                dump_output = data.decode()
+                x, dump_time, x, rec_time = dump_output.split("_")
+                print(dump_output, "video data dumped")
 
     if video:
         # connection video computer
@@ -82,7 +92,7 @@ if correct_input:
             if data.decode() == "connected":
                 print("video PC ready and connected")
                 break
-        # add connection to accelerometers
+        # add connection to accelerometers?
 
     # file location
     data_path = os.path.join("./data", subj_id, visit)
@@ -93,6 +103,8 @@ if correct_input:
 
     # save data
     data = pd.DataFrame()
+
+    #start video recording
     if video:
         message_start = str(trial_n).zfill(4) + "_start_" + str(timestamp)
         conn.send(message_start.encode())
@@ -219,17 +231,20 @@ if correct_input:
         psychopy.clock.wait(3, hogCPUperiod=0.2)
         win.close()
 
+        #end video recording
         if video:
             message_stop = str(trial_n).zfill(4) + "_stop"
             conn.send(message_stop.encode())
 
+        #end EEG recording
         if EEG:
             ns.StopRecording()
             ns.EndSession()
             ns.disconnect()
 
+            #save video data
             if video:
-                if event.getKeys(keyList=["escape"], timeStamped=False):
+                if event.getKeys(keyList=["q"], timeStamped=False):
                     message_finish = "exit_stop"
                     conn.send(message_finish.encode())
                     win.close()
@@ -241,6 +256,7 @@ if correct_input:
                     x, dump_time, x, rec_time = dump_output.split("_")
                     print(dump_output, "video data dumped")
 
+        #save experiment data
         data.to_csv(logfile_fname)
 
 
