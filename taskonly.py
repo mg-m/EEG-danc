@@ -42,6 +42,9 @@ if gui.OK:
     else:
         visit = 'ses-{}'.format(gui.data[1])
     age = gui.data[2]
+    if not gui.data[2].isdigit():
+        correct_input = False
+        print('Incorrect age')
     screens = gui.data[3]
     EEG = gui.data[4]
     showgraph = gui.data[5]
