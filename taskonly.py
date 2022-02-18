@@ -29,19 +29,19 @@ print(gui.data)
 if gui.OK:
     correct_input = True
     subj_id = gui.data[0]
-    if not (subj_id.startswith('sub-') and subj_id.split('-')[1].isdigit() and len(subj_id.split('-')[1])==3):
-        correct_input=False
-        print('Bad subject ID')
+        # if not (subj_id.startswith('sub-') and subj_id.split('-')[1].isdigit() and len(subj_id.split('-')[1])==3):
+        # correct_input=False
+        # print('Bad subject ID')
     visit=gui.data[1]
-    if not gui.data[1].isdigit():
-        correct_input=False
-        print('Bad visit number')
-    else:
-        visit = 'ses-{}'.format(gui.data[1])
+    # if not gui.data[1].isdigit():
+    #     correct_input=False
+    #     print('Bad visit number')
+    # else:
+    #     visit = 'ses-{}'.format(gui.data[1])
     age = gui.data[2]
-    if not gui.data[2].isdigit():
-        correct_input = False
-        print('Incorrect age')
+    # if not gui.data[2].isdigit():
+    #     correct_input = False
+    #     print('Incorrect age')
     screens = gui.data[3]
     EEG = gui.data[4]
     showgraph = gui.data[5]
@@ -50,30 +50,11 @@ else:
     core.quit()
 if correct_input:
 
-    #shutdown and save data
-    if event.globalKeys.add(key='q', func=core.quit, name='shutdown'):
-        if EEG:
-            ns.StopRecording()
-            ns.EndSession()
-            ns.disconnect()
-        data.to_csv(logfile_fname)
-        if video:
-            if event.getKeys(keyList=["q"], timeStamped=False):
-                message_finish = "exit_stop"
-                conn.send(message_finish.encode())
-                win.close()
-                core.quit()
-
-            data = conn.recv(buffer_size)
-            if "dumped" in data.decode():
-                dump_output = data.decode()
-                x, dump_time, x, rec_time = dump_output.split("_")
-                print(dump_output, "video data dumped")
-
     if video:
         # connection video computer
-        TCP_IP = ""
-        TCP_PORT = 0
+        TCP_IP = "192.168.3.48"
+        TCP_PORT = 5005
+        buffer_size = 1024
 
         # setting up the connection
         print("waiting for the video computer to init")
@@ -101,12 +82,7 @@ if correct_input:
     logfile_fname = os.path.join(data_path, "{}_{}_{}_logfile.csv".format(subj_id, visit, timestamp))
 
     # save data
-    data = pd.DataFrame()
-
-    #start video recording
-    if video:
-        message_start = str(trial_n).zfill(4) + "_start_" + str(timestamp)
-        conn.send(message_start.encode())
+    df = pd.DataFrame()
 
     # welcome
     win = psychopy.visual.Window(size=[600, 600], units="pix", fullscr=False, color=[1, 1, 1], checkTiming=True,screen=0)
@@ -126,136 +102,179 @@ if correct_input:
             return mirror_flip_fun
         win.flip=make_flip_mirror(win.flip)
 
-        if EEG:
-            ns = egi.Netstation()
-            ns.connect('10.10.10.42', 55513)
-            ns.BeginSession()
-            ns.sync()
-            ns.StartRecording()
+    if EEG:
+        ns = egi.Netstation()
+        ns.connect('10.10.10.42', 55513)
+        ns.BeginSession()
+        ns.sync()
+        ns.StartRecording()
 
-        text = psychopy.visual.TextStim(win=win, text="Welcome to this experiment ! ", color=[-1, -1, -1])
+        # shutdown and save data
+    if event.globalKeys.add(key='q', func=core.quit, name='shutdown'):
+        if EEG:
+            ns.StopRecording()
+            ns.EndSession()
+            ns.disconnect()
+        data.to_csv(logfile_fname)
+        if video:
+            if event.getKeys(keyList=["q"], timeStamped=False):
+                message_finish = "exit_stop"
+                conn.send(message_finish.encode())
+
+            data = conn.recv(buffer_size)
+            if "dumped" in data.decode():
+                dump_output = data.decode()
+                x, dump_time, x, rec_time = dump_output.split("_")
+                print(dump_output, "video data dumped")
+        win.close()
+        core.quit()
+
+    text = psychopy.visual.TextStim(win=win, text="Welcome to this experiment ! ", color=[-1, -1, -1])
+    if screens=="2":
+        text.draw=make_draw_mirror(text.draw)
+    text.draw()
+    win.flip()
+    psychopy.clock.wait(3, hogCPUperiod=0.2)
+    text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
+    if screens=="2":
+        text.draw=make_draw_mirror(text.draw)
+    text.draw()
+    win.flip()
+    keys = psychopy.event.waitKeys()
+
+    # start of bloc
+    block_types=['Cylinder','Ball']
+    conditions=[['Horizontal','Vertical'],['Small','Medium','Large']]
+    nBlocks = 1
+    nTrials = 1
+    for block_type,block_conditions in zip(block_types,conditions):
+        text = psychopy.visual.TextStim(win=win, text="Bloc %s" % block_type, color=[-1, -1, -1])
         if screens=="2":
             text.draw=make_draw_mirror(text.draw)
         text.draw()
         win.flip()
         psychopy.clock.wait(3, hogCPUperiod=0.2)
+        for block in range(nBlocks):
+            text = psychopy.visual.TextStim(win=win, text=" Press a key when the child reached the object",color=[-1, -1, -1])
+            if screens=="2":
+                text.draw=make_draw_mirror(text.draw)
+            text.draw()
+            win.flip()
+            psychopy.clock.wait(2, hogCPUperiod=0.2)
+            for trial in range(nTrials):
+
+                condition = random.choice(block_conditions)
+                text = psychopy.visual.TextStim(win=win, text="%s %s" % (condition, block_type), color=[-1, -1, -1])
+                if screens=="2":
+                    text.draw=make_draw_mirror(text.draw)
+                text.draw()
+                if EEG:
+                    ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
+                                  description=bytes(("%s %s" % (condition, block_type)).encode()))
+                # start video recording
+                if video:
+                    message_start = str(trial).zfill(4) + "_start_" + str(timestamp)
+                    conn.send(message_start.encode())
+
+                trialClock = core.Clock()
+                trial_start=core.getTime()
+                win.flip()
+
+                while True:
+                    keys = psychopy.event.getKeys()
+                    if keys:
+                        keytime=trialClock.getTime()
+                        if EEG:
+                            ns.send_event(bytes('grsp'.encode()), label=bytes("grasping".encode()),
+                                          description=bytes("grasping".encode()))
+                        # end video recording
+                        if video:
+                            message_stop = str(trial).zfill(4) + "_stop"
+                            conn.send(message_stop.encode())
+                        break
+
+
+                trial_dur = trialClock.getTime()
+
+                dump_time=float('NaN')
+                rec_time = float('NaN')
+                if video:
+                    while True:
+                        data = conn.recv(buffer_size)
+                        if "dumped" in data.decode():
+                            dump_output = data.decode()
+                            print(dump_output, "video data dumped")
+                            x, dump_time, x, rec_time = dump_output.split("_")
+                            break
+
+                df = df.append({
+                    'id': subj_id,
+                    'visit': visit,
+                    'age': age,
+                    'block_type': block_type,
+                    'block': block,
+                    'trial': trial,
+                    'cond': condition,
+                    'keytime': keytime,
+                    'trial_start': trial_start,
+                    'trial_dur': trial_dur,
+                    'vid_dump_duration': eval(dump_time),
+                    'vid_rec_duration': eval(rec_time),
+                    'trial_rec_diff': trial_dur-eval(rec_time)
+                }, ignore_index=True)
+                df.to_csv(logfile_fname)
+
+                text = psychopy.visual.TextStim(win=win, text=" Press a key when ready for next trial",color=[-1, -1, -1])
+                if screens=="2":
+                    text.draw=make_draw_mirror(text.draw)
+                text.draw()
+                win.flip()
+                psychopy.event.waitKeys()
+            text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s " % (block_type), color=[-1, -1, -1])
+            if screens=="2":
+                text.draw=make_draw_mirror(text.draw)
+            text.draw()
+            win.flip()
+            psychopy.clock.wait(2, hogCPUperiod=0.2)
         text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
         if screens=="2":
             text.draw=make_draw_mirror(text.draw)
         text.draw()
         win.flip()
-        keys = psychopy.event.waitKeys()
+        psychopy.event.waitKeys()
+       # end of bloc
 
-        # start of bloc
-        block_types=['Cylinder','Ball']
-        conditions=[['Horizontal','Vertical'],['Small','Medium','Large']]
-        nBlocks = 1
-        nTrials = 1
-        for block_type,block_conditions in zip(block_types,conditions):
-            text = psychopy.visual.TextStim(win=win, text="Bloc %s" % block_type, color=[-1, -1, -1])
-            if screens=="2":
-                text.draw=make_draw_mirror(text.draw)
-            text.draw()
-            win.flip()
-            psychopy.clock.wait(3, hogCPUperiod=0.2)
-            for block in range(nBlocks):
-                text = psychopy.visual.TextStim(win=win, text=" Press a key when the child reached the object",color=[-1, -1, -1])
-                if screens=="2":
-                    text.draw=make_draw_mirror(text.draw)
-                text.draw()
-                win.flip()
-                psychopy.clock.wait(2, hogCPUperiod=0.2)
-                for trial in range(nTrials):
-                    condition = random.choice(block_conditions)
-                    text = psychopy.visual.TextStim(win=win, text="%s %s" % (condition, block_type), color=[-1, -1, -1])
-                    if screens=="2":
-                        text.draw=make_draw_mirror(text.draw)
-                    text.draw()
-                    if EEG:
-                        ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
-                                      description=bytes(("%s %s" % (condition, block_type)).encode()))
-                    trialClock = core.Clock()
-                    trial_start=core.getTime()
-                    win.flip()
+    # end of experiment
+    text = psychopy.visual.TextStim(win=win, text="End of the experiment", color=[-1, -1, -1])
+    if screens=="2":
+        text.draw=make_draw_mirror(text.draw)
+    text.draw()
+    win.flip()
+    psychopy.clock.wait(3, hogCPUperiod=0.2)
+    win.close()
 
-                    while True:
-                        keys = psychopy.event.getKeys()
-                        if keys:
-                            keytime=trialClock.getTime()
-                            break
-                        if EEG:
-                            ns.send_event(bytes('grsp'.encode()), label=bytes("grasping".encode()), description=bytes("grasping".encode()))
 
-                    trial_dur = trialClock.getTime()
-                    data = data.append({
-                        'id': subj_id,
-                        'visit': visit,
-                        'age': age,
-                        'block_type':block_type,
-                        'block':block,
-                        'trial':trial,
-                        'cond': condition,
-                        'keytime': keytime,
-                        'trial_start':trial_start,
-                        'trial_dur':trial_dur
-                        },ignore_index=True)
-                    data.to_csv(logfile_fname)
+    #end EEG recording
+    if EEG:
+        ns.StopRecording()
+        ns.EndSession()
+        ns.disconnect()
 
-                    text = psychopy.visual.TextStim(win=win, text=" Press a key when ready for next trial",color=[-1, -1, -1])
-                    if screens=="2":
-                        text.draw=make_draw_mirror(text.draw)
-                    text.draw()
-                    win.flip()
-                    psychopy.event.waitKeys()
-                text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s " % (block_type), color=[-1, -1, -1])
-                if screens=="2":
-                    text.draw=make_draw_mirror(text.draw)
-                text.draw()
-                win.flip()
-                psychopy.clock.wait(2, hogCPUperiod=0.2)
-            text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
-            if screens=="2":
-                text.draw=make_draw_mirror(text.draw)
-            text.draw()
-            win.flip()
-            psychopy.event.waitKeys()
-           # end of bloc
-
-        # end of experiment
-        text = psychopy.visual.TextStim(win=win, text="End of the experiment", color=[-1, -1, -1])
-        if screens=="2":
-            text.draw=make_draw_mirror(text.draw)
-        text.draw()
-        win.flip()
-        psychopy.clock.wait(3, hogCPUperiod=0.2)
-        win.close()
-
-        #end video recording
+        #save video data
         if video:
-            message_stop = str(trial_n).zfill(4) + "_stop"
-            conn.send(message_stop.encode())
+            if event.getKeys(keyList=["q"], timeStamped=False):
+                message_finish = "exit_stop"
+                conn.send(message_finish.encode())
+                win.close()
+                core.quit()
 
-        #end EEG recording
-        if EEG:
-            ns.StopRecording()
-            ns.EndSession()
-            ns.disconnect()
+            data = conn.recv(buffer_size)
+            if "dumped" in data.decode():
+                dump_output = data.decode()
+                x, dump_time, x, rec_time = dump_output.split("_")
+                print(dump_output, "video data dumped")
 
-            #save video data
-            if video:
-                if event.getKeys(keyList=["q"], timeStamped=False):
-                    message_finish = "exit_stop"
-                    conn.send(message_finish.encode())
-                    win.close()
-                    core.quit()
-
-                data = conn.recv(buffer_size)
-                if "dumped" in data.decode():
-                    dump_output = data.decode()
-                    x, dump_time, x, rec_time = dump_output.split("_")
-                    print(dump_output, "video data dumped")
-
-        #save experiment data
-        data.to_csv(logfile_fname)
+    #save experiment data
+    df.to_csv(logfile_fname)
 
 
