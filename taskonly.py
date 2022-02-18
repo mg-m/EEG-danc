@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 from psychopy import core, event
 import random
-import matplotlib.pyplot as plt
 import egi.simple as egi
 import datetime
 import socket
