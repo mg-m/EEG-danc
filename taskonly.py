@@ -12,10 +12,10 @@ import random
 import egi.simple as egi
 import datetime
 import socket
-from win32com.client import Dispatch
+
 
 ms_localtime=egi.ms_localtime
-speaker=Dispatch('SAPI.spVoice')
+
 
 # gui interface
 gui = psychopy.gui.Dlg()
@@ -135,14 +135,12 @@ if correct_input:
     if screens=="2":
         text.draw=make_draw_mirror(text.draw)
     text.draw()
-    speaker.Speak(text)
     win.flip()
     psychopy.clock.wait(3, hogCPUperiod=0.2)
     text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
     if screens=="2":
         text.draw=make_draw_mirror(text.draw)
     text.draw()
-    speaker.Speak(text)
     win.flip()
     keys = psychopy.event.waitKeys()
 
@@ -156,7 +154,6 @@ if correct_input:
         if screens=="2":
             text.draw=make_draw_mirror(text.draw)
         text.draw()
-        speaker.Speak(text)
         win.flip()
         psychopy.clock.wait(3, hogCPUperiod=0.2)
         for block in range(nBlocks):
@@ -164,7 +161,6 @@ if correct_input:
             if screens=="2":
                 text.draw=make_draw_mirror(text.draw)
             text.draw()
-            speaker.Speak(text)
             win.flip()
             psychopy.clock.wait(2, hogCPUperiod=0.2)
             for trial in range(nTrials):
@@ -174,7 +170,6 @@ if correct_input:
                 if screens=="2":
                     text.draw=make_draw_mirror(text.draw)
                 text.draw()
-                speaker.Speak(text)
                 if EEG:
                     ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
                                   description=bytes(("%s %s" % (condition, block_type)).encode()))
@@ -235,21 +230,18 @@ if correct_input:
                 if screens=="2":
                     text.draw=make_draw_mirror(text.draw)
                 text.draw()
-                speaker.Speak(text)
                 win.flip()
                 psychopy.event.waitKeys()
             text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s " % (block_type), color=[-1, -1, -1])
             if screens=="2":
                 text.draw=make_draw_mirror(text.draw)
             text.draw()
-            speaker.Speak(text)
             win.flip()
             psychopy.clock.wait(2, hogCPUperiod=0.2)
         text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
         if screens=="2":
             text.draw=make_draw_mirror(text.draw)
         text.draw()
-        speaker.Speak(text)
         win.flip()
         psychopy.event.waitKeys()
        # end of bloc
@@ -259,7 +251,6 @@ if correct_input:
     if screens=="2":
         text.draw=make_draw_mirror(text.draw)
     text.draw()
-    speaker.Speak(text)
     win.flip()
     psychopy.clock.wait(3, hogCPUperiod=0.2)
     win.close()
