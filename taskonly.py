@@ -12,8 +12,10 @@ import random
 import egi.simple as egi
 import datetime
 import socket
+from win32com.client import Dispatch
 
 ms_localtime=egi.ms_localtime
+speaker=Dispatch('SAPI.spVoice')
 
 # gui interface
 gui = psychopy.gui.Dlg()
@@ -133,12 +135,14 @@ if correct_input:
     if screens=="2":
         text.draw=make_draw_mirror(text.draw)
     text.draw()
+    speaker.Speak(text)
     win.flip()
     psychopy.clock.wait(3, hogCPUperiod=0.2)
     text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
     if screens=="2":
         text.draw=make_draw_mirror(text.draw)
     text.draw()
+    speaker.Speak(text)
     win.flip()
     keys = psychopy.event.waitKeys()
 
@@ -152,6 +156,7 @@ if correct_input:
         if screens=="2":
             text.draw=make_draw_mirror(text.draw)
         text.draw()
+        speaker.Speak(text)
         win.flip()
         psychopy.clock.wait(3, hogCPUperiod=0.2)
         for block in range(nBlocks):
@@ -159,6 +164,7 @@ if correct_input:
             if screens=="2":
                 text.draw=make_draw_mirror(text.draw)
             text.draw()
+            speaker.Speak(text)
             win.flip()
             psychopy.clock.wait(2, hogCPUperiod=0.2)
             for trial in range(nTrials):
@@ -168,6 +174,7 @@ if correct_input:
                 if screens=="2":
                     text.draw=make_draw_mirror(text.draw)
                 text.draw()
+                speaker.Speak(text)
                 if EEG:
                     ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
                                   description=bytes(("%s %s" % (condition, block_type)).encode()))
@@ -228,18 +235,21 @@ if correct_input:
                 if screens=="2":
                     text.draw=make_draw_mirror(text.draw)
                 text.draw()
+                speaker.Speak(text)
                 win.flip()
                 psychopy.event.waitKeys()
             text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s " % (block_type), color=[-1, -1, -1])
             if screens=="2":
                 text.draw=make_draw_mirror(text.draw)
             text.draw()
+            speaker.Speak(text)
             win.flip()
             psychopy.clock.wait(2, hogCPUperiod=0.2)
         text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
         if screens=="2":
             text.draw=make_draw_mirror(text.draw)
         text.draw()
+        speaker.Speak(text)
         win.flip()
         psychopy.event.waitKeys()
        # end of bloc
@@ -249,10 +259,13 @@ if correct_input:
     if screens=="2":
         text.draw=make_draw_mirror(text.draw)
     text.draw()
+    speaker.Speak(text)
     win.flip()
     psychopy.clock.wait(3, hogCPUperiod=0.2)
     win.close()
 
+    # save experiment data
+    df.to_csv(logfile_fname)
 
     #end EEG recording
     if EEG:
@@ -260,21 +273,12 @@ if correct_input:
         ns.EndSession()
         ns.disconnect()
 
-        #save video data
-        if video:
-            if event.getKeys(keyList=["q"], timeStamped=False):
-                message_finish = "exit_stop"
-                conn.send(message_finish.encode())
-                win.close()
-                core.quit()
+    #save video data
+    if video:
+        message_finish = "exit_stop"
+        conn.send(message_finish.encode())
 
-            data = conn.recv(buffer_size)
-            if "dumped" in data.decode():
-                dump_output = data.decode()
-                x, dump_time, x, rec_time = dump_output.split("_")
-                print(dump_output, "video data dumped")
+    core.quit()
 
-    #save experiment data
-    df.to_csv(logfile_fname)
 
 
