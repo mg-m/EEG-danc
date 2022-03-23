@@ -15,7 +15,6 @@ import socket
 import pyttsx3, time
 
 
-
 ms_localtime=egi.ms_localtime
 engine=pyttsx3.init()
 
@@ -132,6 +131,9 @@ if correct_input:
                 print(dump_output, "video data dumped")
         win.close()
         core.quit()
+
+    nextFlip=win.getFutureFlipTime(clock='ptb')
+    mySound.play(when=nextFlip)
 
     text = psychopy.visual.TextStim(win=win, text="Welcome to this experiment ! ", color=[-1, -1, -1])
     if screens=="2":
