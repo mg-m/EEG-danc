@@ -87,6 +87,10 @@ if correct_input:
     # save data
     df = pd.DataFrame()
 
+    def sendTrigger():
+        engine.say('"%s %s' % (condition, block_type))
+        engine.runAndWait()
+
     # welcome
     win = psychopy.visual.Window(size=[600, 600], units="pix", fullscr=False, color=[1, 1, 1], checkTiming=True,screen=0)
     if screens=="2":
@@ -131,9 +135,6 @@ if correct_input:
                 print(dump_output, "video data dumped")
         win.close()
         core.quit()
-
-    nextFlip=win.getFutureFlipTime(clock='ptb')
-    mySound.play(when=nextFlip)
 
     text = psychopy.visual.TextStim(win=win, text="Welcome to this experiment ! ", color=[-1, -1, -1])
     if screens=="2":
@@ -180,8 +181,7 @@ if correct_input:
                 if screens=="2":
                     text.draw=make_draw_mirror(text.draw)
                 text.draw()
-                engine.say('"%s %s'% (condition, block_type))
-                engine.runAndWait()
+
                 if EEG:
                     ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
                                   description=bytes(("%s %s" % (condition, block_type)).encode()))
@@ -192,6 +192,8 @@ if correct_input:
 
                 trialClock = core.Clock()
                 trial_start=core.getTime()
+
+                win.callOnFlip(sendTrigger())
                 win.flip()
 
                 while True:
