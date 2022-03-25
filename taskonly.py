@@ -193,8 +193,8 @@ if correct_input:
                 trialClock = core.Clock()
                 trial_start=core.getTime()
 
-                win.callOnFlip(sendTrigger())
                 win.flip()
+                win.callOnFlip(sendTrigger())
 
                 while True:
                     keys = psychopy.event.getKeys()
