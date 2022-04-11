@@ -116,37 +116,6 @@ if correct_input:
         ns.sync()
         ns.StartRecording()
 
-    def myfunc():
-        trialClock = core.Clock()
-        t = 0
-        while t < 10:
-            grating1 = psychopy.visual.GratingStim(win, mask="gauss",
-                                          color=[1.0, 1.0, 1.0],
-                                          opacity=1.0,
-                                          size=(1.0, 1.0),
-                                          sf=(4, 0), ori=45)
-
-            grating2 = psychopy.visual.GratingStim(win, mask="gauss",
-                                          color=[1.0, 1.0, 1.0],
-                                          opacity=0.5,
-                                          size=(1.0, 1.0),
-                                          sf=(4, 0), ori=135)
-            t = trialClock.getTime()
-            grating1.setPhase(1 * t)  # drift at 1Hz
-            if screens == "2":
-                grating1.draw = make_draw_mirror(grating1.draw)
-            grating1.draw()  # redraw it
-            grating2.setPhase(2 * t)  # drift at 2Hz
-            if screens == "2":
-                grating2.draw = make_draw_mirror(grating2.draw)
-            grating2.draw()  # redraw it
-        win.flip()
-
-    if event.globalKeys.add(key='g',func=myfunc(), name='grating'):
-         if EEG:
-            ns.send_event(bytes('grat'.encode()), label=bytes("grating".encode()),
-                          description=bytes("grating".encode()))
-
         # shutdown and save data
     if event.globalKeys.add(key='q', func=core.quit, name='shutdown'):
         if EEG:
@@ -226,9 +195,10 @@ if correct_input:
                 trial_start=core.getTime()
 
                 win.flip()
-                win.callOnFlip(sendTrigger())
-                win.callOnFlip(ns.send_event())
-                win.callOnFlip(message_start)
+                if EEG:
+                    win.callOnFlip(ns.send_event())
+                if video:
+                    win.callOnFlip(message_start)
 
                 while True:
                     keys = psychopy.event.getKeys()
