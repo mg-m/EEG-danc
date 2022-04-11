@@ -227,6 +227,8 @@ if correct_input:
 
                 win.flip()
                 win.callOnFlip(sendTrigger())
+                win.callOnFlip(ns.send_event())
+                win.callOnFlip(message_start)
 
                 while True:
                     keys = psychopy.event.getKeys()
