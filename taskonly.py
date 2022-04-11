@@ -133,8 +133,12 @@ if correct_input:
                                           sf=(4, 0), ori=135)
             t = trialClock.getTime()
             grating1.setPhase(1 * t)  # drift at 1Hz
+            if screens == "2":
+                grating1.draw = make_draw_mirror(grating1.draw)
             grating1.draw()  # redraw it
             grating2.setPhase(2 * t)  # drift at 2Hz
+            if screens == "2":
+                grating2.draw = make_draw_mirror(grating2.draw)
             grating2.draw()  # redraw it
         win.flip()
 
