@@ -91,7 +91,7 @@ if correct_input:
         engine.say('"%s %s' % (condition, block_type))
         engine.runAndWait()
 
-    # welcome
+    # win
     win = psychopy.visual.Window(size=[600, 600], units="pix", fullscr=False, color=[1, 1, 1], checkTiming=True,screen=0)
     if screens=="2":
         win2=psychopy.visual.Window(size=[600, 600], units="pix", fullscr=False, color=[1, 1, 1], checkTiming=True,screen=1)
@@ -116,6 +116,33 @@ if correct_input:
         ns.sync()
         ns.StartRecording()
 
+    def myfunc():
+        trialClock = core.Clock()
+        t = 0
+        while t < 10:
+            grating1 = psychopy.visual.GratingStim(win, mask="gauss",
+                                          color=[1.0, 1.0, 1.0],
+                                          opacity=1.0,
+                                          size=(1.0, 1.0),
+                                          sf=(4, 0), ori=45)
+
+            grating2 = psychopy.visual.GratingStim(win, mask="gauss",
+                                          color=[1.0, 1.0, 1.0],
+                                          opacity=0.5,
+                                          size=(1.0, 1.0),
+                                          sf=(4, 0), ori=135)
+            t = trialClock.getTime()
+            grating1.setPhase(1 * t)  # drift at 1Hz
+            grating1.draw()  # redraw it
+            grating2.setPhase(2 * t)  # drift at 2Hz
+            grating2.draw()  # redraw it
+        win.flip()
+
+    if event.globalKeys.add(key='g',func=myfunc(), name='grating'):
+         if EEG:
+            ns.send_event(bytes('grat'.encode()), label=bytes("grating".encode()),
+                          description=bytes("grating".encode()))
+
         # shutdown and save data
     if event.globalKeys.add(key='q', func=core.quit, name='shutdown'):
         if EEG:
@@ -136,6 +163,7 @@ if correct_input:
         win.close()
         core.quit()
 
+    #start
     text = psychopy.visual.TextStim(win=win, text="Welcome to this experiment ! ", color=[-1, -1, -1])
     if screens=="2":
         text.draw=make_draw_mirror(text.draw)
@@ -265,6 +293,19 @@ if correct_input:
         win.flip()
         psychopy.event.waitKeys()
        # end of bloc
+
+    #resting state recording
+    text = psychopy.visual.TextStim(win=win, text="resting state recording", color=[-1, -1, -1])
+    if screens == "2":
+        text.draw = make_draw_mirror(text.draw)
+    text.draw()
+    engine.say('resting state recording')
+    engine.runAndWait()
+    win.flip()
+    psychopy.clock.wait(3, hogCPUperiod=0.2)
+    if EEG:
+        ns.send_event(bytes('rs'.encode()), label=bytes("resting state".encode()),
+                      description=bytes("resting state".encode()))
 
     # end of experiment
     text = psychopy.visual.TextStim(win=win, text="End of the experiment", color=[-1, -1, -1])
