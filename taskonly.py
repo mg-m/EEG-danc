@@ -136,6 +136,15 @@ if correct_input:
         win.close()
         core.quit()
 
+    #callonflip
+    def myFunction():
+        if EEG:
+            ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
+                          description=bytes(("%s %s" % (condition, block_type)).encode()))
+        if video:
+            message_start = str(trial).zfill(4) + "_start_" + str(timestamp)
+            conn.send(message_start.encode())
+
     #start
     text = psychopy.visual.TextStim(win=win, text="Welcome to this experiment ! ", color=[-1, -1, -1])
     if screens=="2":
@@ -174,7 +183,7 @@ if correct_input:
             engine.say('Press a key when the child reached the object')
             engine.runAndWait()
             win.flip()
-            psychopy.clock.wait(2, hogCPUperiod=0.2)
+            psychopy.clock.wait(1, hogCPUperiod=0.2)
             for trial in range(nTrials):
 
                 condition = random.choice(block_conditions)
@@ -182,23 +191,9 @@ if correct_input:
                 if screens=="2":
                     text.draw=make_draw_mirror(text.draw)
                 text.draw()
-
-                if EEG:
-                    ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
-                                  description=bytes(("%s %s" % (condition, block_type)).encode()))
-                # start video recording
-                if video:
-                    message_start = str(trial).zfill(4) + "_start_" + str(timestamp)
-                    conn.send(message_start.encode())
-
                 trialClock = core.Clock()
                 trial_start=core.getTime()
-
-                win.flip()
-                if EEG:
-                    win.callOnFlip(ns.send_event())
-                if video:
-                    win.callOnFlip(message_start)
+                win.callOnFlip(myFunction)
 
                 while True:
                     keys = psychopy.event.getKeys()
