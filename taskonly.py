@@ -161,11 +161,211 @@ if correct_input:
     win.flip()
     keys = psychopy.event.waitKeys()
 
+    #blocks on demand
+
+    def blockball():
+        if event.globalKeys.add(key='b', func=blockball, name='blockball'):
+            nBlocks = 1
+            nTrials = 9
+            block_type = ball
+            block_conditions = [small, medium, large]
+            for block in range(nBlocks):
+                text = psychopy.visual.TextStim(win=win, text=" Press a key when the child reached the object",
+                                                color=[-1, -1, -1])
+                if screens == "2":
+                    text.draw = make_draw_mirror(text.draw)
+                text.draw()
+                engine.say('Press a key when the child reached the object')
+                engine.runAndWait()
+                win.flip()
+                psychopy.clock.wait(1, hogCPUperiod=0.2)
+
+                for trial in range(nTrials):
+
+                    condition = random.choice(block_conditions)
+                    text = psychopy.visual.TextStim(win=win, text="%s %s" % (condition, block_type), color=[-1, -1, -1])
+                    if screens == "2":
+                        text.draw = make_draw_mirror(text.draw)
+                    text.draw()
+                    trialClock = core.Clock()
+                    trial_start = core.getTime()
+                    win.callOnFlip(myFunction)
+                    win.flip()
+
+                    while True:
+                        keys = psychopy.event.getKeys()
+                        if keys:
+                            keytime = trialClock.getTime()
+                            if EEG:
+                                ns.send_event(bytes('grsp'.encode()), label=bytes("grasping".encode()),
+                                              description=bytes("grasping".encode()))
+                            # end video recording
+                            if video:
+                                message_stop = str(trial).zfill(4) + "_stop"
+                                conn.send(message_stop.encode())
+                            break
+
+                    trial_dur = trialClock.getTime()
+
+                    dump_time = float('NaN')
+                    rec_time = float('NaN')
+                    if video:
+                        while True:
+                            data = conn.recv(buffer_size)
+                            if "dumped" in data.decode():
+                                dump_output = data.decode()
+                                print(dump_output, "video data dumped")
+                                x, dump_time, x, rec_time = dump_output.split("_")
+                                break
+
+                    df = df.append({
+                        'id': subj_id,
+                        'visit': visit,
+                        'age': age,
+                        'block_type': block_type,
+                        'block': block,
+                        'trial': trial,
+                        'cond': condition,
+                        'keytime': keytime,
+                        'trial_start': trial_start,
+                        'trial_dur': trial_dur,
+                        'vid_dump_duration': eval(dump_time),
+                        'vid_rec_duration': eval(rec_time),
+                        'trial_rec_diff': trial_dur - eval(rec_time)
+                    }, ignore_index=True)
+                    df.to_csv(logfile_fname)
+
+                    text = psychopy.visual.TextStim(win=win, text=" Press a key when ready for next trial",
+                                                    color=[-1, -1, -1])
+                    if screens == "2":
+                        text.draw = make_draw_mirror(text.draw)
+                    text.draw()
+                    engine.say('Press a key when ready for next trial')
+                    engine.runAndWait()
+                    win.flip()
+                    psychopy.event.waitKeys()
+                text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s " % (block_type), color=[-1, -1, -1])
+                if screens == "2":
+                    text.draw = make_draw_mirror(text.draw)
+                text.draw()
+                engine.say('End of Bloc %s' % (block_type))
+                engine.runAndWait()
+                win.flip()
+                psychopy.clock.wait(2, hogCPUperiod=0.2)
+            text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
+            if screens == "2":
+                text.draw = make_draw_mirror(text.draw)
+            text.draw()
+            engine.say('Press a key to continue')
+            engine.runAndWait()
+            win.flip()
+            psychopy.event.waitKeys()
+
+
+    def blockcylinder():
+        if event.globalKeys.add(key='c', func=blockcylinder, name='blockcylinder'):
+            nBlocks = 1
+            nTrials = 10
+            block_type = cylinder
+            block_conditions = [horizontal, vertical]
+            for block in range(nBlocks):
+                text = psychopy.visual.TextStim(win=win, text=" Press a key when the child reached the object",
+                                                color=[-1, -1, -1])
+                if screens == "2":
+                    text.draw = make_draw_mirror(text.draw)
+                text.draw()
+                engine.say('Press a key when the child reached the object')
+                engine.runAndWait()
+                win.flip()
+                psychopy.clock.wait(1, hogCPUperiod=0.2)
+
+                for trial in range(nTrials):
+
+                    condition = random.choice(block_conditions)
+                    text = psychopy.visual.TextStim(win=win, text="%s %s" % (condition, block_type), color=[-1, -1, -1])
+                    if screens == "2":
+                        text.draw = make_draw_mirror(text.draw)
+                    text.draw()
+                    trialClock = core.Clock()
+                    trial_start = core.getTime()
+                    win.callOnFlip(myFunction)
+                    win.flip()
+
+                    while True:
+                        keys = psychopy.event.getKeys()
+                        if keys:
+                            keytime = trialClock.getTime()
+                            if EEG:
+                                ns.send_event(bytes('grsp'.encode()), label=bytes("grasping".encode()),
+                                              description=bytes("grasping".encode()))
+                            # end video recording
+                            if video:
+                                message_stop = str(trial).zfill(4) + "_stop"
+                                conn.send(message_stop.encode())
+                            break
+
+                    trial_dur = trialClock.getTime()
+
+                    dump_time = float('NaN')
+                    rec_time = float('NaN')
+                    if video:
+                        while True:
+                            data = conn.recv(buffer_size)
+                            if "dumped" in data.decode():
+                                dump_output = data.decode()
+                                print(dump_output, "video data dumped")
+                                x, dump_time, x, rec_time = dump_output.split("_")
+                                break
+
+                    df = df.append({
+                        'id': subj_id,
+                        'visit': visit,
+                        'age': age,
+                        'block_type': block_type,
+                        'block': block,
+                        'trial': trial,
+                        'cond': condition,
+                        'keytime': keytime,
+                        'trial_start': trial_start,
+                        'trial_dur': trial_dur,
+                        'vid_dump_duration': eval(dump_time),
+                        'vid_rec_duration': eval(rec_time),
+                        'trial_rec_diff': trial_dur - eval(rec_time)
+                    }, ignore_index=True)
+                    df.to_csv(logfile_fname)
+
+                    text = psychopy.visual.TextStim(win=win, text=" Press a key when ready for next trial",
+                                                    color=[-1, -1, -1])
+                    if screens == "2":
+                        text.draw = make_draw_mirror(text.draw)
+                    text.draw()
+                    engine.say('Press a key when ready for next trial')
+                    engine.runAndWait()
+                    win.flip()
+                    psychopy.event.waitKeys()
+                text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s " % (block_type), color=[-1, -1, -1])
+                if screens == "2":
+                    text.draw = make_draw_mirror(text.draw)
+                text.draw()
+                engine.say('End of Bloc %s' % (block_type))
+                engine.runAndWait()
+                win.flip()
+                psychopy.clock.wait(2, hogCPUperiod=0.2)
+            text = psychopy.visual.TextStim(win=win, text=" Press a key to continue ", color=[-1, -1, -1])
+            if screens == "2":
+                text.draw = make_draw_mirror(text.draw)
+            text.draw()
+            engine.say('Press a key to continue')
+            engine.runAndWait()
+            win.flip()
+            psychopy.event.waitKeys()
+
+
     # start of bloc
     block_types=['Cylinder','Ball']
     conditions=[['Horizontal','Vertical'],['Small','Medium','Large']]
     nBlocks = 1
-    nTrials = 1
+
     for block_type,block_conditions in zip(block_types,conditions):
         text = psychopy.visual.TextStim(win=win, text="Bloc %s" % block_type, color=[-1, -1, -1])
         if screens=="2":
@@ -184,6 +384,12 @@ if correct_input:
             engine.runAndWait()
             win.flip()
             psychopy.clock.wait(1, hogCPUperiod=0.2)
+
+            if block_types == "Cylinder":
+                nTrials = 10
+            elif block_types == "Ball":
+                nTrials = 9
+
             for trial in range(nTrials):
 
                 condition = random.choice(block_conditions)
@@ -305,6 +511,5 @@ if correct_input:
         conn.send(message_finish.encode())
 
     core.quit()
-
 
 
