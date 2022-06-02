@@ -178,7 +178,7 @@ if correct_input:
                 engine.say('Press a key when the child reached the object')
                 engine.runAndWait()
                 win.flip()
-                psychopy.clock.wait(1, hogCPUperiod=0.2)
+                psychopy.clock.wait(1, hogCPUperiod=1.5)
 
                 for trial in range(nTrials):
 
