@@ -163,7 +163,7 @@ if correct_input:
 
     #blocks on demand
 
-    def blockball():
+    def blockball(win):
         if event.globalKeys.add(key='b', func=blockball, name='blockball'):
             nBlocks = 1
             nTrials = 9
@@ -229,9 +229,9 @@ if correct_input:
                         'keytime': keytime,
                         'trial_start': trial_start,
                         'trial_dur': trial_dur,
-                        'vid_dump_duration': eval(dump_time),
-                        'vid_rec_duration': eval(rec_time),
-                        'trial_rec_diff': trial_dur - eval(rec_time)
+                        #'vid_dump_duration': eval(dump_time),
+                        #'vid_rec_duration': eval(rec_time),
+                        #'trial_rec_diff': trial_dur - eval(rec_time)
                     }, ignore_index=True)
                     df.to_csv(logfile_fname)
 
@@ -262,7 +262,7 @@ if correct_input:
             psychopy.event.waitKeys()
 
 
-    def blockcylinder():
+    def blockcylinder(win):
         if event.globalKeys.add(key='c', func=blockcylinder, name='blockcylinder'):
             nBlocks = 1
             nTrials = 10
@@ -328,9 +328,9 @@ if correct_input:
                         'keytime': keytime,
                         'trial_start': trial_start,
                         'trial_dur': trial_dur,
-                        'vid_dump_duration': eval(dump_time),
-                        'vid_rec_duration': eval(rec_time),
-                        'trial_rec_diff': trial_dur - eval(rec_time)
+                        #'vid_dump_duration': eval(dump_time),
+                        #'vid_rec_duration': eval(rec_time),
+                        #'trial_rec_diff': trial_dur - eval(rec_time)
                     }, ignore_index=True)
                     df.to_csv(logfile_fname)
 
@@ -364,7 +364,8 @@ if correct_input:
     # start of bloc
     block_types=['Cylinder','Ball']
     conditions=[['Horizontal','Vertical'],['Small','Medium','Large']]
-    nBlocks = 1
+    nBlocks = 2
+    nTrials=1
 
     for block_type,block_conditions in zip(block_types,conditions):
         text = psychopy.visual.TextStim(win=win, text="Bloc %s" % block_type, color=[-1, -1, -1])
@@ -384,11 +385,6 @@ if correct_input:
             engine.runAndWait()
             win.flip()
             psychopy.clock.wait(1, hogCPUperiod=0.2)
-
-            if block_types == "Cylinder":
-                nTrials = 10
-            elif block_types == "Ball":
-                nTrials = 9
 
             for trial in range(nTrials):
 
@@ -440,9 +436,9 @@ if correct_input:
                     'keytime': keytime,
                     'trial_start': trial_start,
                     'trial_dur': trial_dur,
-                    'vid_dump_duration': eval(dump_time),
-                    'vid_rec_duration': eval(rec_time),
-                    'trial_rec_diff': trial_dur-eval(rec_time)
+                    #'vid_dump_duration': eval(dump_time),
+                    #'vid_rec_duration': eval(rec_time),
+                    #'trial_rec_diff': trial_dur-eval(rec_time)
                 }, ignore_index=True)
                 df.to_csv(logfile_fname)
 
