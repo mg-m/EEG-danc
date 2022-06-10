@@ -271,11 +271,14 @@ if correct_input:
         for block_type,block_conditions in zip(block_types,conditions):
             run_block(block_type, block_conditions)
 
-        keys = psychopy.event.getKeys()
-        if keys=='c':
-            run_block('Cylinder',['Horizontal','Vertical'])
-        elif keys=='b':
-            run_block('Ball', ['Small','Medium','Large'])
+
+        kb = KeyBoard()
+        keys = kb.getKeys()
+        for thisKey in keys:
+            if thisKey=='c':
+                run_block('Cylinder',['Horizontal','Vertical'])
+            elif thisKey=='b':
+                run_block('Ball', ['Small','Medium','Large'])
 
 
     # end of experiment
