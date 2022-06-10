@@ -263,7 +263,7 @@ if correct_input:
     # start of bloc
     block_types=['Cylinder','Ball']
     conditions=[['Horizontal','Vertical'],['Small','Medium','Large']]
-    nBlocks = 2
+    nBlocks = 4
     nTrials=1
 
     for block in range(nBlocks):
