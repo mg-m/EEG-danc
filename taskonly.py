@@ -13,6 +13,7 @@ import egi.simple as egi
 import datetime
 import socket
 import pyttsx3, time
+from psychopy.hardware import keyboard
 
 
 ms_localtime=egi.ms_localtime
@@ -272,12 +273,12 @@ if correct_input:
             run_block(block_type, block_conditions)
 
 
-        kb = KeyBoard()
-        keys = kb.getKeys()
-        for thisKey in keys:
-            if thisKey=='c':
+        kb = keyboard.KeyBoard()
+        keys = kb.getKeys(['c','b'])
+        for key in keys:
+            if key=='c':
                 run_block('Cylinder',['Horizontal','Vertical'])
-            elif thisKey=='b':
+            elif key=='b':
                 run_block('Ball', ['Small','Medium','Large'])
 
 
