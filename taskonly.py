@@ -144,8 +144,6 @@ if correct_input:
 
     def run_block(block_type, block_conditions):
 
-        df = pd.DataFrame()
-
         text = psychopy.visual.TextStim(win=win, text="Bloc %s" % block_type, color=[-1, -1, -1])
         if screens == "2":
             text.draw = make_draw_mirror(text.draw)
@@ -166,69 +164,10 @@ if correct_input:
         psychopy.clock.wait(1, hogCPUperiod=1.5)
 
         for trial in range(nTrials):
+            run_trial(trial, block_type, block_conditions)
 
-            condition = random.choice(block_conditions)
-            text = psychopy.visual.TextStim(win=win, text="%s %s" % (condition, block_type), color=[-1, -1, -1])
-            if screens == "2":
-                text.draw = make_draw_mirror(text.draw)
-            text.draw()
-            trialClock = core.Clock()
-            trial_start = core.getTime()
-            win.callOnFlip(myFunction, condition, block_type, trial)
-            win.flip()
-
-            while True:
-                keys = psychopy.event.getKeys()
-                if keys:
-                    keytime = trialClock.getTime()
-                    if EEG:
-                        ns.send_event(bytes('grsp'.encode()), label=bytes("grasping".encode()),
-                                      description=bytes("grasping".encode()))
-                    # end video recording
-                    if video:
-                        message_stop = str(trial).zfill(4) + "_stop"
-                        conn.send(message_stop.encode())
-                    break
-
-            trial_dur = trialClock.getTime()
-
-            dump_time = float('NaN')
-            rec_time = float('NaN')
-            if video:
-                while True:
-                    data = conn.recv(buffer_size)
-                    if "dumped" in data.decode():
-                        dump_output = data.decode()
-                        print(dump_output, "video data dumped")
-                        x, dump_time, x, rec_time = dump_output.split("_")
-                        break
-
-            df = df.append({
-                'id': subj_id,
-                'visit': visit,
-                'age': age,
-                'block_type': block_type,
-                'block': block,
-                'trial': trial,
-                'cond': condition,
-                'keytime': keytime,
-                'trial_start': trial_start,
-                'trial_dur': trial_dur,
-                # 'vid_dump_duration': eval(dump_time),
-                # 'vid_rec_duration': eval(rec_time),
-                # 'trial_rec_diff': trial_dur-eval(rec_time)
-            }, ignore_index=True)
-            df.to_csv(logfile_fname)
-
-            text = psychopy.visual.TextStim(win=win, text=" Press a key when ready for next trial", color=[-1, -1, -1])
-            if screens == "2":
-                text.draw = make_draw_mirror(text.draw)
-            text.draw()
-            engine.say('Press a key when ready for next trial')
-            engine.runAndWait()
-            win.flip()
-            psychopy.event.waitKeys()
-        text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s. Press a key to continue " % (block_type), color=[-1, -1, -1])
+        text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s. Press a key to continue " % (block_type),
+                                        color=[-1, -1, -1])
         if screens == "2":
             text.draw = make_draw_mirror(text.draw)
         text.draw()
@@ -237,6 +176,74 @@ if correct_input:
         win.flip()
         psychopy.event.waitKeys()
         # end of bloc
+
+
+    def run_trial(trial, block_type, block_conditions):
+
+        df = pd.DataFrame()
+
+        condition = random.choice(block_conditions)
+        text = psychopy.visual.TextStim(win=win, text="%s %s" % (condition, block_type), color=[-1, -1, -1])
+        if screens == "2":
+            text.draw = make_draw_mirror(text.draw)
+        text.draw()
+        trialClock = core.Clock()
+        trial_start = core.getTime()
+        win.callOnFlip(myFunction, condition, block_type, trial)
+        win.flip()
+
+        while True:
+            keys = psychopy.event.getKeys()
+            if keys:
+                keytime = trialClock.getTime()
+                if EEG:
+                    ns.send_event(bytes('grsp'.encode()), label=bytes("grasping".encode()),
+                                  description=bytes("grasping".encode()))
+                # end video recording
+                if video:
+                    message_stop = str(trial).zfill(4) + "_stop"
+                    conn.send(message_stop.encode())
+                break
+
+        trial_dur = trialClock.getTime()
+
+        dump_time = float('NaN')
+        rec_time = float('NaN')
+        if video:
+            while True:
+                data = conn.recv(buffer_size)
+                if "dumped" in data.decode():
+                    dump_output = data.decode()
+                    print(dump_output, "video data dumped")
+                    x, dump_time, x, rec_time = dump_output.split("_")
+                    break
+
+        df = df.append({
+            'id': subj_id,
+            'visit': visit,
+            'age': age,
+            'block_type': block_type,
+            'block': block,
+            'trial': trial,
+            'cond': condition,
+            'keytime': keytime,
+            'trial_start': trial_start,
+            'trial_dur': trial_dur,
+            # 'vid_dump_duration': eval(dump_time),
+            # 'vid_rec_duration': eval(rec_time),
+            # 'trial_rec_diff': trial_dur-eval(rec_time)
+        }, ignore_index=True)
+        df.to_csv(logfile_fname)
+
+        text = psychopy.visual.TextStim(win=win, text=" Press a key when ready for next trial", color=[-1, -1, -1])
+        if screens == "2":
+            text.draw = make_draw_mirror(text.draw)
+        text.draw()
+        engine.say('Press a key when ready for next trial')
+        engine.runAndWait()
+        win.flip()
+        psychopy.event.waitKeys()
+    
 
     #start
     text = psychopy.visual.TextStim(win=win, text="Welcome to this experiment ! ", color=[-1, -1, -1])
@@ -264,10 +271,11 @@ if correct_input:
         for block_type,block_conditions in zip(block_types,conditions):
             run_block(block_type, block_conditions)
 
-        if event.globalKeys.add(key='c',func=run_block('Cylinder',block_conditions),name=run_block):
-            run_block('Cylinder',block_conditions)
-        elif event.globalKeys.add(key='b',func=run_block('Ball',block_conditions),name=run_block):
-            run_block('Ball',block_conditions)
+        keys = psychopy.event.getKeys()
+        if keys=='c':
+            run_block('Cylinder',['Horizontal','Vertical'])
+        elif keys=='b':
+            run_block('Ball', ['Small','Medium','Large'])
 
 
     # end of experiment
