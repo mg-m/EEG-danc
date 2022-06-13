@@ -160,7 +160,7 @@ if correct_input:
         psychopy.clock.wait(1, hogCPUperiod=1.5)
 
         for trial in range(nTrials):
-            run_trial(trial, block_type, block_conditions)
+            run_trial(trial, block_type, block_conditions,df)
 
         text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s. Press a key to continue " % (block_type),
                                         color=[-1, -1, -1])
