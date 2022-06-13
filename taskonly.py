@@ -130,7 +130,7 @@ if correct_input:
         core.quit()
 
     #callonflip
-    def myFunction(condition, block_type, trial,df):
+    def myFunction(condition, block_type, trial):
         if EEG:
             ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
                           description=bytes(("%s %s" % (condition, block_type)).encode()))
@@ -183,15 +183,10 @@ if correct_input:
         text.draw()
         engine.say('Condition %s Press a key when ready' % condition)
         engine.runAndWait()
+        trialClock = core.Clock()
         psychopy.event.waitKeys()
-
-        #go signal
-        text = psychopy.visual.TextStim(win=win, text="show object", color=[-1, -1, -1])
-        if screens == "2":
-            text.draw = make_draw_mirror(text.draw)
-        text.draw()
-        engine.say("show object")
-        engine.runAndWait()
+        win.callOnFlip(myFunction, condition, block_type, trial)
+        win.flip()
 
         while True:
             keys = psychopy.event.getKeys()
@@ -201,6 +196,13 @@ if correct_input:
                     ns.send_event(bytes("cond".encode()), label=bytes("%s %s" % (condition, block_type).encode()),
                                   description=bytes("%s %s" % (condition, block_type).encode()))
 
+        #go signal
+        text = psychopy.visual.TextStim(win=win, text="show object", color=[-1, -1, -1])
+        if screens == "2":
+            text.draw = make_draw_mirror(text.draw)
+        text.draw()
+        engine.say("show object")
+        engine.runAndWait()
         trialClock = core.Clock()
         trial_start = core.getTime()
         win.callOnFlip(myFunction, condition, block_type, trial)
