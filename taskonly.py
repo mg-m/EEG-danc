@@ -177,12 +177,30 @@ if correct_input:
     def run_trial(trial, block_type, block_conditions,df):
 
         condition = random.choice(block_conditions)
-        text = psychopy.visual.TextStim(win=win, text="%s %s" % (condition, block_type), color=[-1, -1, -1])
+        text = psychopy.visual.TextStim(win=win, text="%s %s Press a key when ready" % (condition, block_type), color=[-1, -1, -1])
         if screens == "2":
             text.draw = make_draw_mirror(text.draw)
         text.draw()
-        engine.say('Condition %s' % condition)
+        engine.say('Condition %s Press a key when ready' % condition)
         engine.runAndWait()
+        psychopy.event.waitKeys()
+
+        #go signal
+        text = psychopy.visual.TextStim(win=win, text="show object", color=[-1, -1, -1])
+        if screens == "2":
+            text.draw = make_draw_mirror(text.draw)
+        text.draw()
+        engine.say("show object")
+        engine.runAndWait()
+
+        while True:
+            keys = psychopy.event.getKeys()
+            if keys:
+                keytime = trialClock.getTime()
+                if EEG:
+                    ns.send_event(bytes("cond".encode()), label=bytes("%s %s" % (condition, block_type).encode()),
+                                  description=bytes("%s %s" % (condition, block_type).encode()))
+
         trialClock = core.Clock()
         trial_start = core.getTime()
         win.callOnFlip(myFunction, condition, block_type, trial)
