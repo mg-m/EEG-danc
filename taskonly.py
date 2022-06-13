@@ -13,8 +13,6 @@ import egi.simple as egi
 import datetime
 import socket
 import pyttsx3, time
-from psychopy.hardware import keyboard
-
 
 ms_localtime=egi.ms_localtime
 engine=pyttsx3.init()
@@ -79,6 +77,7 @@ if correct_input:
                 break
 
     # file location
+    df = pd.DataFrame()
     data_path = os.path.join("./data", subj_id, visit)
     if not os.path.exists(data_path):
         os.makedirs(data_path, exist_ok=True)
@@ -131,7 +130,7 @@ if correct_input:
         core.quit()
 
     #callonflip
-    def myFunction(condition, block_type, trial):
+    def myFunction(condition, block_type, trial,df):
         if EEG:
             ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
                           description=bytes(("%s %s" % (condition, block_type)).encode()))
@@ -139,7 +138,7 @@ if correct_input:
             message_start = str(trial).zfill(4) + "_start_" + str(timestamp)
             conn.send(message_start.encode())
 
-    def run_block(block_type, block_conditions):
+    def run_block(block_type, block_conditions,df):
 
         text = psychopy.visual.TextStim(win=win, text="Bloc %s" % block_type, color=[-1, -1, -1])
         if screens == "2":
@@ -175,9 +174,7 @@ if correct_input:
         # end of bloc
 
 
-    def run_trial(trial, block_type, block_conditions):
-
-        df = pd.DataFrame()
+    def run_trial(trial, block_type, block_conditions,df):
 
         condition = random.choice(block_conditions)
         text = psychopy.visual.TextStim(win=win, text="%s %s" % (condition, block_type), color=[-1, -1, -1])
@@ -262,6 +259,7 @@ if correct_input:
         text.draw=make_draw_mirror(text.draw)
     text.draw()
     win.flip()
+    psychopy.event.waitKeys()
 
     # start of bloc
     block_types=['Cylinder','Ball']
@@ -272,7 +270,7 @@ if correct_input:
     for block in range(nBlocks):
 
         for block_type,block_conditions in zip(block_types,conditions):
-            run_block(block_type, block_conditions)
+            run_block(block_type, block_conditions,df)
 
 
         keys = psychopy.event.getKeys(['c','b'])
