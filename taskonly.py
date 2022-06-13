@@ -85,10 +85,6 @@ if correct_input:
     timestamp=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     logfile_fname = os.path.join(data_path, "{}_{}_{}_logfile.csv".format(subj_id, visit, timestamp))
 
-    def sendTrigger():
-        engine.say('"%s %s' % (condition, block_type))
-        engine.runAndWait()
-
     # win
     win = psychopy.visual.Window(size=[600, 600], units="pix", fullscr=False, color=[1, 1, 1], checkTiming=True,screen=0)
     if screens=="2":
@@ -188,6 +184,8 @@ if correct_input:
         if screens == "2":
             text.draw = make_draw_mirror(text.draw)
         text.draw()
+        engine.say('Condition %s' % condition)
+        engine.runAndWait()
         trialClock = core.Clock()
         trial_start = core.getTime()
         win.callOnFlip(myFunction, condition, block_type, trial)
@@ -210,6 +208,7 @@ if correct_input:
 
         dump_time = float('NaN')
         rec_time = float('NaN')
+        trial_rec_diff = float('NaN')
         if video:
             while True:
                 data = conn.recv(buffer_size)
@@ -217,6 +216,9 @@ if correct_input:
                     dump_output = data.decode()
                     print(dump_output, "video data dumped")
                     x, dump_time, x, rec_time = dump_output.split("_")
+                    dump_time=eval(dump_time)
+                    rec_time=eval(rec_time)
+                    trial_rec_diff=trial_dur-eval(rec_time)
                     break
 
         df = df.append({
@@ -230,9 +232,9 @@ if correct_input:
             'keytime': keytime,
             'trial_start': trial_start,
             'trial_dur': trial_dur,
-            # 'vid_dump_duration': eval(dump_time),
-            # 'vid_rec_duration': eval(rec_time),
-            # 'trial_rec_diff': trial_dur-eval(rec_time)
+            'vid_dump_duration': dump_time,
+            'vid_rec_duration': rec_time,
+            'trial_rec_diff': trial_rec_diff
         }, ignore_index=True)
         df.to_csv(logfile_fname)
 
@@ -273,13 +275,12 @@ if correct_input:
             run_block(block_type, block_conditions)
 
 
-        kb = keyboard.KeyBoard()
-        keys = kb.getKeys(['c','b'])
+        keys = psychopy.event.getKeys(['c','b'])
         for key in keys:
             if key=='c':
-                run_block('Cylinder',['Horizontal','Vertical'])
+                run_block('Cylinder',conditions[0])
             elif key=='b':
-                run_block('Ball', ['Small','Medium','Large'])
+                run_block('Ball', conditions[1])
 
 
     # end of experiment
