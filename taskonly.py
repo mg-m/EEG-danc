@@ -130,7 +130,7 @@ if correct_input:
         core.quit()
 
     #callonflip
-    def myFunction(condition, block_type, trial):
+    def speak (condition, block_type, trial):
         if EEG:
             ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
                           description=bytes(("%s %s" % (condition, block_type)).encode()))
@@ -185,7 +185,7 @@ if correct_input:
         engine.runAndWait()
         trialClock = core.Clock()
         psychopy.event.waitKeys()
-        win.callOnFlip(myFunction, condition, block_type, trial)
+        win.callOnFlip(speak, condition, block_type, trial)
         win.flip()
 
         while True:
@@ -206,7 +206,7 @@ if correct_input:
         engine.runAndWait()
         trialClock = core.Clock()
         trial_start = core.getTime()
-        win.callOnFlip(myFunction, condition, block_type, trial)
+        win.callOnFlip(speak, condition, block_type, trial)
         win.flip()
 
         while True:
