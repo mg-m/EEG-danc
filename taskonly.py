@@ -110,24 +110,25 @@ if correct_input:
         ns.StartRecording()
 
         # shutdown and save data
-    if event.globalKeys.add(key='q', func=core.quit, name='shutdown'):
-        if EEG:
-            ns.StopRecording()
-            ns.EndSession()
-            ns.disconnect()
-        data.to_csv(logfile_fname)
-        if video:
-            if event.getKeys(keyList=["q"], timeStamped=False):
-                message_finish = "exit_stop"
-                conn.send(message_finish.encode())
+    def quit(data):
+        if event.globalKeys.add(key='q', func=core.quit, name='shutdown'):
+            if EEG:
+                ns.StopRecording()
+                ns.EndSession()
+                ns.disconnect()
+            data.to_csv(logfile_fname)
+            if video:
+                if event.getKeys(keyList=["q"], timeStamped=False):
+                    message_finish = "exit_stop"
+                    conn.send(message_finish.encode())
 
-            data = conn.recv(buffer_size)
-            if "dumped" in data.decode():
-                dump_output = data.decode()
-                x, dump_time, x, rec_time = dump_output.split("_")
-                print(dump_output, "video data dumped")
-        win.close()
-        core.quit()
+                data = conn.recv(buffer_size)
+                if "dumped" in data.decode():
+                    dump_output = data.decode()
+                    x, dump_time, x, rec_time = dump_output.split("_")
+                    print(dump_output, "video data dumped")
+            win.close()
+            core.quit()
 
     #callonflip
     def callonflip (condition, block_type, trial):
