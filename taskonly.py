@@ -195,6 +195,7 @@ if correct_input:
                 if EEG:
                     ns.send_event(bytes("cond".encode()), label=bytes("%s %s" % (condition, block_type).encode()),
                                   description=bytes("%s %s" % (condition, block_type).encode()))
+                break 
 
         #go signal
         text = psychopy.visual.TextStim(win=win, text="show object", color=[-1, -1, -1])
