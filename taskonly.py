@@ -111,6 +111,8 @@ if correct_input:
 
         # shutdown and save data
     def quit(data):
+        win.close()
+        core.quit()
         if EEG:
             ns.StopRecording()
             ns.EndSession()
@@ -125,8 +127,6 @@ if correct_input:
             dump_output = data.decode()
             x, dump_time, x, rec_time = dump_output.split("_")
             print(dump_output, "video data dumped")
-        win.close()
-        core.quit()
 
     #callonflip
     def callonflip (condition, block_type, trial):
@@ -287,6 +287,10 @@ if correct_input:
     nBlocks = 4
     nTrials=1
 
+    keys = psychopy.event.getKeys(['q'])
+    for key in keys:
+        quit(data)
+
     for block in range(nBlocks):
 
         for block_type,block_conditions in zip(block_types,conditions):
@@ -298,9 +302,6 @@ if correct_input:
                 run_block('Cylinder',conditions[0])
             elif key=='b':
                 run_block('Ball', conditions[1])
-            elif key=='q':
-                quit(data)
-
 
     # end of experiment
     text = psychopy.visual.TextStim(win=win, text="End of the experiment", color=[-1, -1, -1])
