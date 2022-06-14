@@ -12,7 +12,7 @@ import random
 import egi.simple as egi
 import datetime
 import socket
-import pyttsx3, time
+import pyttsx3
 
 ms_localtime=egi.ms_localtime
 engine=pyttsx3.init()
@@ -156,8 +156,8 @@ if correct_input:
         text.draw()
         engine.say('Press a key when the child reached the object')
         engine.runAndWait()
-        win.flip()
         psychopy.clock.wait(1, hogCPUperiod=1.5)
+        win.flip()
 
         for trial in range(nTrials):
             run_trial(trial, block_type, block_conditions,df)
@@ -195,7 +195,7 @@ if correct_input:
                 if EEG:
                     ns.send_event(bytes("cond".encode()), label=bytes("%s %s" % (condition, block_type).encode()),
                                   description=bytes("%s %s" % (condition, block_type).encode()))
-                break 
+                break
 
         #go signal
         text = psychopy.visual.TextStim(win=win, text="show object", color=[-1, -1, -1])
