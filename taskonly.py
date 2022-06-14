@@ -13,6 +13,7 @@ import egi.simple as egi
 import datetime
 import socket
 import pyttsx3
+from psychopy.core import quit
 
 ms_localtime=egi.ms_localtime
 engine=pyttsx3.init()
@@ -280,6 +281,8 @@ if correct_input:
     text.draw()
     win.flip()
     psychopy.event.waitKeys()
+    
+    event.globalKeys['q'].func == quit
 
     # start of bloc
     block_types=['Cylinder','Ball']
@@ -288,6 +291,7 @@ if correct_input:
     nTrials=1
 
     keys = psychopy.event.getKeys(['q'])
+
     for key in keys:
         quit(data)
 
