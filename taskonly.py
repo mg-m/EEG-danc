@@ -112,26 +112,24 @@ if correct_input:
         # shutdown and save data
 
     def quit_exp():
-        if event.getKeys(keyList=["q"], timeStamped=False):
-            if EEG:
-                ns.StopRecording()
-                ns.EndSession()
-                ns.disconnect()
-            df.to_csv(logfile_fname)
-            if video:
-                message_finish = "exit_stop"
-                conn.send(message_finish.encode())
+       if EEG:
+            ns.StopRecording()
+            ns.EndSession()
+            ns.disconnect()
+       df.to_csv(logfile_fname)
+       if video:
+            message_finish = "exit_stop"
+            conn.send(message_finish.encode())
 
-                data = conn.recv(buffer_size)
-                if "dumped" in data.decode():
-                    dump_output = data.decode()
-                    x, dump_time, x, rec_time = dump_output.split("_")
-                    print(dump_output, "video data dumped")
-            win.close()
-            core.quit()
+            data = conn.recv(buffer_size)
+            if "dumped" in data.decode():
+                dump_output = data.decode()
+                x, dump_time, x, rec_time = dump_output.split("_")
+                print(dump_output, "video data dumped")
+       win.close()
+       core.quit()
 
-
-    event.globalKeys.add(key='q', func=quit_exp(), name='shutdown')
+    event.globalKeys.add(key='q', func=quit_exp, name='shutdown')
 
     #callonflip
     def callonflip (condition, block_type, trial):
@@ -142,7 +140,7 @@ if correct_input:
             message_start = str(trial).zfill(4) + "_start_" + str(timestamp)
             conn.send(message_start.encode())
 
-    def run_block(block_type, block_conditions,df):
+    def run_block(block, block_type, block_conditions,df):
 
         text = psychopy.visual.TextStim(win=win, text="Bloc %s" % block_type, color=[-1, -1, -1])
         if screens == "2":
@@ -164,7 +162,7 @@ if correct_input:
         win.flip()
 
         for trial in range(nTrials):
-            run_trial(trial, block_type, block_conditions,df)
+            run_trial(block, trial, block_type, block_conditions,df)
 
         text = psychopy.visual.TextStim(win=win, text=" End of Bloc %s. Press a key to continue " % (block_type),
                                         color=[-1, -1, -1])
@@ -178,7 +176,7 @@ if correct_input:
         # end of bloc
 
 
-    def run_trial(trial, block_type, block_conditions,df):
+    def run_trial(trial, block, block_type, block_conditions,df):
 
         condition = random.choice(block_conditions)
         text = psychopy.visual.TextStim(win=win, text="%s %s Press a key when ready" % (condition, block_type), color=[-1, -1, -1])
@@ -292,20 +290,22 @@ if correct_input:
     nBlocks = 2
     nTrials=1
 
+    block_idx=0
+
     for block in range(nBlocks):
 
         for block_type,block_conditions in zip(block_types,conditions):
-            run_block(block_type, block_conditions,df)
+            run_block(block_idx, block_type, block_conditions,df)
+            block_idx+=1
 
-            while True:
+    while True:
 
-                event.globalKeys.add(key='c', func=run_block('Cylinder', conditions[0], df), name='block_cylinder')
-                event.globalKeys.add(key='b', func=run_block('Ball', conditions[1], df), name='block_ball')
-
-                if event.getKeys(keyList=["c"], timeStamped=False):
-                        run_block('Cylinder',conditions[0],df)
-                elif event.getKeys(keyList=["b"], timeStamped=False):
-                            run_block('Ball', conditions[1],df)
+        if event.getKeys(keyList=["c"], timeStamped=False):
+            run_block(block_idx, 'Cylinder',conditions[0],df)
+            block_idx += 1
+        elif event.getKeys(keyList=["b"], timeStamped=False):
+            run_block(block_idx, 'Ball', conditions[1],df)
+            block_idx += 1
 
 
     # end of experiment
