@@ -289,7 +289,7 @@ if correct_input:
     # start of bloc
     block_types=['Cylinder','Ball']
     conditions=[['Horizontal','Vertical'],['Small','Medium','Large']]
-    nBlocks = 4
+    nBlocks = 2
     nTrials=1
 
     for block in range(nBlocks):
@@ -297,13 +297,22 @@ if correct_input:
         for block_type,block_conditions in zip(block_types,conditions):
             run_block(block_type, block_conditions,df)
 
-        while True:
-            keys = psychopy.event.waitKeys(['c','b'], timeStamped=False)
-            for key in keys:
-                if key=='c':
-                    run_block('Cylinder',conditions[0])
-                elif key=='b':
-                        run_block('Ball', conditions[1])
+    #blocks demand
+    block_types = ['Cylinder', 'Ball']
+    conditions = [['Horizontal', 'Vertical'], ['Small', 'Medium', 'Large']]
+    nBlocks = 2
+    nTrials = 1
+
+    event.globalKeys.add(key=["c"], func=run_block('Cylinder', conditions[0], df), name='block_cylinder')
+    event.globalKeys.add(key=["b"], func=run_block('Ball', conditions[1], df), name='block_ball')
+
+    for block in range(nBlocks):
+
+        for block_type,block_conditions in zip(block_types,conditions):
+            if event.getKeys(keyList=["c"], timeStamped=False):
+                    run_block('Cylinder',conditions[0],df)
+            elif event.getKeys(keyList=["b"], timeStamped=False):
+                        run_block('Ball', conditions[1],df)
 
 
     # end of experiment
