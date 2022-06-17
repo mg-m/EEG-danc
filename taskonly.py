@@ -13,7 +13,6 @@ import egi.simple as egi
 import datetime
 import socket
 import pyttsx3
-from psychopy.core import quit
 
 ms_localtime=egi.ms_localtime
 engine=pyttsx3.init()
@@ -111,23 +110,28 @@ if correct_input:
         ns.StartRecording()
 
         # shutdown and save data
-    def quit(data):
-        win.close()
-        core.quit()
-        if EEG:
-            ns.StopRecording()
-            ns.EndSession()
-            ns.disconnect()
-        data.to_csv(logfile_fname)
-        if video:
-            message_finish = "exit_stop"
-            conn.send(message_finish.encode())
 
-        data = conn.recv(buffer_size)
-        if "dumped" in data.decode():
-            dump_output = data.decode()
-            x, dump_time, x, rec_time = dump_output.split("_")
-            print(dump_output, "video data dumped")
+    def quit_exp():
+        if event.getKeys(keyList=["q"], timeStamped=False):
+            if EEG:
+                ns.StopRecording()
+                ns.EndSession()
+                ns.disconnect()
+            df.to_csv(logfile_fname)
+            if video:
+                message_finish = "exit_stop"
+                conn.send(message_finish.encode())
+
+                data = conn.recv(buffer_size)
+                if "dumped" in data.decode():
+                    dump_output = data.decode()
+                    x, dump_time, x, rec_time = dump_output.split("_")
+                    print(dump_output, "video data dumped")
+            win.close()
+            core.quit()
+
+
+    event.globalKeys.add(key='q', func=quit_exp(), name='shutdown')
 
     #callonflip
     def callonflip (condition, block_type, trial):
@@ -281,8 +285,6 @@ if correct_input:
     text.draw()
     win.flip()
     psychopy.event.waitKeys()
-    
-    event.globalKeys['q'].func == quit
 
     # start of bloc
     block_types=['Cylinder','Ball']
@@ -290,22 +292,19 @@ if correct_input:
     nBlocks = 4
     nTrials=1
 
-    keys = psychopy.event.getKeys(['q'])
-
-    for key in keys:
-        quit(data)
-
     for block in range(nBlocks):
 
         for block_type,block_conditions in zip(block_types,conditions):
             run_block(block_type, block_conditions,df)
 
-        keys = psychopy.event.getKeys(['c','b','q'])
+    while True:
+        keys = psychopy.event.waitKeys(['c','b'])
         for key in keys:
             if key=='c':
                 run_block('Cylinder',conditions[0])
             elif key=='b':
                 run_block('Ball', conditions[1])
+
 
     # end of experiment
     text = psychopy.visual.TextStim(win=win, text="End of the experiment", color=[-1, -1, -1])
@@ -316,22 +315,7 @@ if correct_input:
     engine.runAndWait()
     win.flip()
     psychopy.clock.wait(3, hogCPUperiod=0.2)
-    win.close()
 
-    # save experiment data
-    df.to_csv(logfile_fname)
-
-    #end EEG recording
-    if EEG:
-        ns.StopRecording()
-        ns.EndSession()
-        ns.disconnect()
-
-    #save video data
-    if video:
-        message_finish = "exit_stop"
-        conn.send(message_finish.encode())
-
-    core.quit()
+    quit_exp()
 
 
