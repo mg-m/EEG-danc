@@ -299,8 +299,8 @@ if correct_input:
 
             while True:
 
-                event.globalKeys.add(key=["c"], func=run_block('Cylinder', conditions[0], df), name='block_cylinder')
-                event.globalKeys.add(key=["b"], func=run_block('Ball', conditions[1], df), name='block_ball')
+                event.globalKeys.add(key='c', func=run_block('Cylinder', conditions[0], df), name='block_cylinder')
+                event.globalKeys.add(key='b', func=run_block('Ball', conditions[1], df), name='block_ball')
 
                 if event.getKeys(keyList=["c"], timeStamped=False):
                         run_block('Cylinder',conditions[0],df)
