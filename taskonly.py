@@ -169,7 +169,7 @@ if correct_input:
         if screens == "2":
             text.draw = make_draw_mirror(text.draw)
         text.draw()
-        engine.say('End of Bloc %s' % (block_type))
+        engine.say('End of Bloc %s Press a key to continue' % (block_type))
         engine.runAndWait()
         win.flip()
         psychopy.event.waitKeys()
@@ -269,11 +269,11 @@ if correct_input:
     
 
     #start
-    text = psychopy.visual.TextStim(win=win, text="Welcome to this experiment ! ", color=[-1, -1, -1])
+    text = psychopy.visual.TextStim(win=win, text="Start of the experiment ", color=[-1, -1, -1])
     if screens=="2":
         text.draw=make_draw_mirror(text.draw)
     text.draw()
-    engine.say('Welcome to this experiment')
+    engine.say('Start of the experiment')
     engine.runAndWait()
     win.flip()
     psychopy.clock.wait(3, hogCPUperiod=0.2)
