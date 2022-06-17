@@ -297,13 +297,13 @@ if correct_input:
         for block_type,block_conditions in zip(block_types,conditions):
             run_block(block_type, block_conditions,df)
 
-    while True:
-        keys = psychopy.event.waitKeys(['c','b'])
-        for key in keys:
-            if key=='c':
-                run_block('Cylinder',conditions[0])
-            elif key=='b':
-                run_block('Ball', conditions[1])
+        while True:
+            keys = psychopy.event.waitKeys(['c','b'], timeStamped=False)
+            for key in keys:
+                if key=='c':
+                    run_block('Cylinder',conditions[0])
+                elif key=='b':
+                        run_block('Ball', conditions[1])
 
 
     # end of experiment
