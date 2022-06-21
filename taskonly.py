@@ -55,7 +55,8 @@ if correct_input:
 
     if video:
         # connection video computer
-        TCP_IP = "192.168.3.48"
+        #TCP_IP = "192.168.2.140"
+        TCP_IP = "192.168.2.29"
         TCP_PORT = 5005
         buffer_size = 1024
 
@@ -132,13 +133,16 @@ if correct_input:
     event.globalKeys.add(key='q', func=quit_exp, name='shutdown')
 
     #callonflip
-    def callonflip (condition, block_type, trial):
+    def send_trigger_and_video_cmd(evt, condition, block_type, vid_cmd):
         if EEG:
-            ns.send_event(bytes('obj'.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
-                          description=bytes(("%s %s" % (condition, block_type)).encode()))
+            send_trigger(evt, condition, block_type)
         if video:
-            message_start = str(trial).zfill(4) + "_start_" + str(timestamp)
-            conn.send(message_start.encode())
+            conn.send(vid_cmd.encode())
+
+    def send_trigger(evt, condition, block_type):
+        if EEG:
+            ns.send_event(bytes(evt.encode()), label=bytes(("%s %s" % (condition, block_type)).encode()),
+                description = bytes(("%s %s" % (condition, block_type)).encode()))
 
     def run_block(block, block_type, block_conditions,df):
 
@@ -151,16 +155,6 @@ if correct_input:
         win.flip()
         psychopy.clock.wait(3, hogCPUperiod=0.2)
 
-        text = psychopy.visual.TextStim(win=win, text=" Press a key when the child reached the object",
-                                        color=[-1, -1, -1])
-        if screens == "2":
-            text.draw = make_draw_mirror(text.draw)
-        text.draw()
-        engine.say('Press a key when the child reached the object')
-        engine.runAndWait()
-        psychopy.clock.wait(1, hogCPUperiod=1.5)
-        win.flip()
-
         for trial in range(nTrials):
             run_trial(block, trial, block_type, block_conditions,df)
 
@@ -169,9 +163,27 @@ if correct_input:
         if screens == "2":
             text.draw = make_draw_mirror(text.draw)
         text.draw()
-        engine.say('End of Bloc %s Press a key to continue' % (block_type))
+        engine.say('End of Bloc %s' % (block_type))
         engine.runAndWait()
         win.flip()
+
+        if video:
+            vid_cmd = str(block).zfill(4) + "_" + "_convert_" + str(timestamp)
+            conn.send(vid_cmd.encode())
+
+            while True:
+                data = conn.recv(buffer_size)
+                if "converted" in data.decode():
+                    converted_output = data.decode()
+                    print(converted_output, "video data converted")
+                    x, convert_time = converted_output.split("_")
+                    convert_time=eval(convert_time)
+                    break
+
+        engine.say('Press any key to continue')
+        engine.runAndWait()
+        win.flip()
+
         psychopy.event.waitKeys()
         # end of bloc
 
@@ -183,45 +195,41 @@ if correct_input:
         if screens == "2":
             text.draw = make_draw_mirror(text.draw)
         text.draw()
+        win.flip()
         engine.say('Condition %s Press a key when ready' % condition)
         engine.runAndWait()
         trialClock = core.Clock()
         psychopy.event.waitKeys()
-        win.callOnFlip(callonflip, condition, block_type, trial)
+        video_cmd = str(block).zfill(4) + "_" + str(trial).zfill(4) + "_start_" + str(timestamp)
+        win.callOnFlip(send_trigger_and_video_cmd, "strt", condition, block_type, video_cmd)
         win.flip()
 
         while True:
             keys = psychopy.event.getKeys()
             if keys:
                 keytime = trialClock.getTime()
-                if EEG:
-                    ns.send_event(bytes("cond".encode()), label=bytes("%s %s" % (condition, block_type).encode()),
-                                  description=bytes("%s %s" % (condition, block_type).encode()))
                 break
+
+        psychopy.clock.wait(1, hogCPUperiod=1.5)
 
         #go signal
         text = psychopy.visual.TextStim(win=win, text="show object", color=[-1, -1, -1])
         if screens == "2":
             text.draw = make_draw_mirror(text.draw)
         text.draw()
-        engine.say("show object")
+        engine.say("go")
         engine.runAndWait()
         trialClock = core.Clock()
         trial_start = core.getTime()
-        win.callOnFlip(callonflip, condition, block_type, trial)
+        win.callOnFlip(send_trigger, "go", condition, block_type)
         win.flip()
 
         while True:
             keys = psychopy.event.getKeys()
             if keys:
                 keytime = trialClock.getTime()
-                if EEG:
-                    ns.send_event(bytes('grsp'.encode()), label=bytes("grasping".encode()),
-                                  description=bytes("grasping".encode()))
-                # end video recording
-                if video:
-                    message_stop = str(trial).zfill(4) + "_stop"
-                    conn.send(message_stop.encode())
+                video_cmd = str(block).zfill(4) + "_" + str(trial).zfill(4) + "_stop"
+                send_trigger_and_video_cmd('grsp', condition, block_type, video_cmd)
                 break
 
         trial_dur = trialClock.getTime()
@@ -236,9 +244,9 @@ if correct_input:
                     dump_output = data.decode()
                     print(dump_output, "video data dumped")
                     x, dump_time, x, rec_time = dump_output.split("_")
-                    dump_time=eval(dump_time)
-                    rec_time=eval(rec_time)
-                    trial_rec_diff=trial_dur-eval(rec_time)
+                    dump_time=float(dump_time)
+                    rec_time=float(rec_time)
+                    trial_rec_diff=trial_dur-float(rec_time)
                     break
 
         df = df.append({
