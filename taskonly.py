@@ -180,7 +180,7 @@ if correct_input:
                     convert_time=eval(convert_time)
                     break
 
-        engine.say('Press any key to continue')
+        engine.say('Press a key to continue')
         engine.runAndWait()
         win.flip()
 
@@ -210,7 +210,7 @@ if correct_input:
                 keytime = trialClock.getTime()
                 break
 
-        psychopy.clock.wait(1, hogCPUperiod=1.5)
+        psychopy.clock.wait(1.5, hogCPUperiod=0.2)
 
         #go signal
         text = psychopy.visual.TextStim(win=win, text="show object", color=[-1, -1, -1])
