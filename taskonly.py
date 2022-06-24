@@ -172,13 +172,15 @@ if correct_input:
             conn.send(vid_cmd.encode())
 
             while True:
-                data = conn.recv(buffer_size)
-                if "converted" in data.decode():
-                    converted_output = data.decode()
-                    print(converted_output, "video data converted")
-                    x, convert_time = converted_output.split("_")
-                    convert_time=eval(convert_time)
-                    break
+                ready = select.select([conn], [], [], 10)
+                if ready[0]:
+                    data = conn.recv(buffer_size)
+                    if "converted" in data.decode():
+                        converted_output = data.decode()
+                        print(converted_output, "video data converted")
+                        x, convert_time = converted_output.split("_")
+                        convert_time=eval(convert_time)
+                        break
 
         engine.say('Press a key to continue')
         engine.runAndWait()
@@ -239,15 +241,17 @@ if correct_input:
         trial_rec_diff = float('NaN')
         if video:
             while True:
-                data = conn.recv(buffer_size)
-                if "dumped" in data.decode():
-                    dump_output = data.decode()
-                    print(dump_output, "video data dumped")
-                    x, dump_time, x, rec_time = dump_output.split("_")
-                    dump_time=float(dump_time)
-                    rec_time=float(rec_time)
-                    trial_rec_diff=trial_dur-float(rec_time)
-                    break
+                ready = select.select([conn], [], [], 10)
+                if ready[0]:
+                    data = conn.recv(buffer_size)
+                    if "dumped" in data.decode():
+                        dump_output = data.decode()
+                        print(dump_output, "video data dumped")
+                        x, dump_time, x, rec_time = dump_output.split("_")
+                        dump_time=float(dump_time)
+                        rec_time=float(rec_time)
+                        trial_rec_diff=trial_dur-float(rec_time)
+                        break
 
         df = df.append({
             'id': subj_id,
