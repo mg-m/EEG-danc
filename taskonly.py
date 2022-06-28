@@ -201,7 +201,7 @@ if correct_input:
         engine.say('Condition %s Press a key when ready' % condition)
         engine.runAndWait()
         trialClock = core.Clock()
-        psychopy.event.waitKeys()
+        psychopy.event.waitKeys(maxWait=20)
         video_cmd = str(block).zfill(4) + "_" + str(trial).zfill(4) + "_start_" + str(timestamp)
         win.callOnFlip(send_trigger_and_video_cmd, "strt", condition, block_type, video_cmd)
         win.flip()
