@@ -227,7 +227,7 @@ if correct_input:
         win.flip()
 
         while True:
-            keys = psychopy.event.waitKeys(maxWait=20)
+            psychopy.event.waitKeys(maxWait=20)
             if keys:
                 keytime = trialClock.getTime()
                 video_cmd = str(block).zfill(4) + "_" + str(trial).zfill(4) + "_stop"
