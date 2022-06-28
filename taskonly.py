@@ -13,6 +13,7 @@ import egi.simple as egi
 import datetime
 import socket
 import pyttsx3
+import select
 
 ms_localtime=egi.ms_localtime
 engine=pyttsx3.init()
@@ -227,7 +228,7 @@ if correct_input:
         win.flip()
 
         while True:
-            psychopy.event.waitKeys(maxWait=20)
+            keys = psychopy.event.waitKeys(maxWait=20)
             if keys:
                 keytime = trialClock.getTime()
                 video_cmd = str(block).zfill(4) + "_" + str(trial).zfill(4) + "_stop"
